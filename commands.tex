@@ -1,0 +1,139 @@
+% !TeX root = main.tex
+% !TeX spellcheck = de_DE
+% !TeX encoding = utf8
+
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+
+
+\usepackage[bookmarks,		%Lesezeichen für Reader erzeugen
+	pageanchor,		%Inhaltsverzeichnis mit Links
+	colorlinks,		%farbige Links, statt Rahmen
+	citecolor=gray,
+	linkcolor=black,
+	urlcolor=black,
+	filecolor=black,
+	menucolor=black,
+	pdftitle={Bachelorarbeit},
+	pdfauthor={Henry Bathke},
+	pdfsubject={Bachelorarbeit SS2016},
+	]{hyperref}
+\usepackage{amsmath}
+\usepackage[ngerman,nameinlink]{cleveref}
+\usepackage{amssymb}
+\usepackage{gensymb}
+\usepackage{pdfpages}
+\usepackage[backend=bibtex]{biblatex}
+
+%broken biblatex http://tex.stackexchange.com/questions/311426/bibliography-error-use-of-blxbblverbaddi-doesnt-match-its-definition-ve
+\makeatletter
+\def\blx@maxline{77}
+\makeatother
+
+\usepackage{multirow}
+\usepackage[
+	%disable
+	]{todonotes}
+\usepackage[tikz]{bclogo}
+\usepackage[binary-units=true]{siunitx}
+\usepackage{varwidth}
+\sisetup{locale = DE}
+\usepackage{xcolor}
+\usepackage{geometry}
+\usepackage{etoolbox}
+\usepackage{filecontents}
+\usepackage{subcaption}
+\usepackage[framed,numbered,autolinebreaks,useliterate]{mcode}
+\usepackage{newunicodechar}
+\usepackage{lastpage}
+\usepackage{import}
+\newunicodechar{ß}{{\ss{}}}
+\usepackage[normalem]{ulem}
+\usepackage{rubfonts2009}
+\usepackage[autostyle=true]{csquotes}
+%\usepackage{tikz}
+%\usepackage[europeanresistors]{circuitikz}
+\usepackage{pgfplots}
+\usepackage{pgfplotstable}
+\usetikzlibrary{shapes, arrows.meta, positioning, decorations.pathmorphing, math, calc}
+\sisetup{per-mode=symbol} 
+
+\tikzset{
+	block/.style={draw, rectangle, minimum width = 2cm, minimum height = 1.4 cm, align=center},
+	arrow/.style={-{Stealth[scale=1.5]}}
+}
+
+\newcommand{\editRem}[1]{\ifmmode\hbox{\sout{$#1$}}\else\sout{#1}\fi}
+\newcommand{\editAdd}[1]{\textcolor{green!50!black}{#1}}
+\newcommand{\editRep}[2]{\editRem{#1} \editAdd{#2}}
+\newcommand{\editCom}[1]{\textcolor{gray}{(#1)}}
+\bibliography{database.bib}
+
+\newcommand{\executeiffilenewer}[3]{%
+	\ifnum\pdfstrcmp{\pdffilemoddate{#1}}%
+	{\pdffilemoddate{#2}}>0%
+	{\immediate\write18{#3}}\fi%
+}
+% set inkscape binary path according to operating-system
+\newcommand{\Inkscape}{inkscape }%
+
+% includesvg[scale]{file} command
+\newcommand{\includesvg}[2][1]{%
+	\executeiffilenewer{#2.svg}{#2.pdf}{%
+		\Inkscape  -z -D --file="#2.svg" --export-pdf="#2.pdf" --export-latex}%
+	\scalebox{#1}{\import{}{#2.pdf_tex}}%
+}
+
+
+\pgfplotsset{compat=1.6}
+
+\global\mdfdefinestyle{taskstyle}{%
+	linecolor = black!20!white, 
+	linewidth=3pt,%
+	leftmargin=0.2cm,
+	topline=false, 
+	bottomline=false, 
+	rightline=false
+}
+
+
+\newcounter{taskcount}[subsection]                                              
+\newenvironment{task}
+{
+\refstepcounter{taskcount}
+%\begin{bclogo}[couleur = blue!20, couleurBord=black, logo=\bccrayon]{Aufgabe \alph{taskcount})}
+%\begin{leftbar}
+\begin{mdframed}[style=taskstyle]
+	{
+		\large
+		\textbf{Aufgabe \alph{taskcount})}
+	}
+	\vspace{0.5em}
+	\newline
+}{
+\end{mdframed}
+%\end{leftbar}
+%\end{bclogo}
+}
+	
+\pgfplotscreateplotcyclelist{hollow}{%
+	mark=o,color=red,thick\\%
+	mark=square,color=brown,thick\\%
+	mark=x,color=green!50!black,thick\\%
+	mark=triangle,color=blue,thick\\%
+	mark=diamond,color=black,thick\\%
+}	
+
+%\renewcommand*\sectionformat{}
+
+
+\usepackage[headsepline, headtopline, plainheadsepline, plainheadtopline, footsepline, plainfootsepline]{scrlayer-scrpage}
+%\ihead*{Henry Bathke}
+\chead*{}
+\automark[chapter]{chapter}
+\ohead*{\headmark}
+\cfoot*{\thepage/\pageref{LastPage}}
+\pagestyle{scrheadings}
+

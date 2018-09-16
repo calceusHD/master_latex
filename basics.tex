@@ -4,3 +4,82 @@
 
 \chapter{Error Correcting Codes}
 
+For modern communications systems reliable data transmission and storage ist required. To achieve this goal usually error correcting codes are used. There are different possible codes available for error correction, but I will restrain myself to LDPC\cite{Ga63} codes in this thesis. As these codes can archive good performance and can be used at large block lengths\cite{TaSc2017}. This is especially useful for use with NAND based solid state drives.
+
+When describing a block code there are important parameters as the message length $k$. The message is what is given into the encoder and the result from the decoder.
+, the block length $n$, and the rate $R = k / n$. 
+
+
+\section{Low-Density Parity-Check (LDPC) Codes}
+
+The following section will describe LDPC codes invented by Robert Gallager\cite{Ga63}. Starting with a graph representation I will describe the LDPC code and then continue with a matrix representation. LDPC codes can be shown as a bipartite graph also called Tanner graph\cite{Ta81} based on their inventor. \cref{tanner_ex} shows an example of one, where the check and parity nodes are connected by edges. This is an effective representation, moreover it will also help understanding the decoding algorithm later.
+
+\begin{figure}
+	\begin{tikzpicture}[
+		cnode/.style={draw,rectangle,node distance=.5cm,align=center,minimum width=.5cm, minimum height=.5cm},
+		vnode/.style={draw,circle,node distance=.5cm,align=center,minimum width=.5cm, minimum height=.5cm}
+		]
+		\node (vn) [vnode] {};
+		\node [right=of vn] {code Symbols (variable nodes)};
+		\node (cn) [below=of vn,cnode] {};
+		\node [right=of cn] {parity equations (check nodes)};
+	\end{tikzpicture}
+	
+	\begin{tikzpicture}[
+		cnode/.style={draw,rectangle,node distance=1cm,align=center,minimum width=.5cm, minimum height=.5cm},
+		vnode/.style={draw,circle,node distance=1cm,align=center,minimum width=.5cm, minimum height=.5cm}
+	]
+	\begin{scope}[start chain=going right, node distance=15mm]
+		\node [vnode, on chain] (v0) {};
+		\node [vnode, on chain] (v1) {};
+		\node [vnode, on chain] (v2) {};
+		\node [vnode, on chain] (v3) {};
+		\node [vnode, on chain] (v4) {};
+		\node [vnode, on chain] (v5) {};
+		\node [vnode, on chain] (v6) {};
+		\node [vnode, on chain] (v7) {};
+	\end{scope}
+	\begin{scope}[start chain=going right, node distance=15mm]
+		\node [cnode, on chain, above=2cm of v2] (c0) {};
+		\node [cnode, on chain] (c1) {};
+		\node [cnode, on chain] (c2) {};
+		\node [cnode, on chain] (c3) {};
+	\end{scope}
+	\draw (c0) -- (v1);
+	\draw (c0) -- (v3);
+	\draw (c0) -- (v4);	
+	\draw (c0) -- (v7);
+	\draw (c1) -- (v0);
+	\draw (c1) -- (v1);
+	\draw (c1) -- (v2);
+	\draw (c1) -- (v5);
+	\draw (c2) -- (v2);
+	\draw (c2) -- (v5);
+	\draw (c2) -- (v6);
+	\draw (c2) -- (v7);
+	\draw (c3) -- (v0);
+	\draw (c3) -- (v3);
+	\draw (c3) -- (v4);
+	\draw (c3) -- (v6);
+	\end{tikzpicture}
+	\centering
+	\caption{An example Tanner graph.}
+	\label{tanner_ex}
+\end{figure}
+
+Instead of using the Tanner graph one can also use a matrix representation. In this matrix the ones represent the edges of the graph. Usually for a LDPC code the matrix is sparse or low density as the name implies. In \cref{ldpc_mat} a matrix representing the same code as in the graph in \cref{tanner_ex} is shown. The $\bm{H}$ matrix is of size $(n-k) x n$. And the possible code words are given by the null space of $\bm{H}$, so in other words $c$ is a code word if and only if $c\bm{H}^T = \bm{0}$\cite{RiUr01}.
+
+
+\begin{equation}
+	\bm{H} = \left[\begin{matrix}
+		0 & 1 & 0 & 1 & 1 & 0 & 0 & 1 \\ 
+		1 & 1 & 1 & 0 & 0 & 1 & 0 & 0 \\
+		0 & 0 & 1 & 0 & 0 & 1 & 1 & 1 \\
+		1 & 0 & 0 & 1 & 1 & 0 & 1 & 0
+	\end{matrix}\right] \label{ldpc_mat}
+\end{equation}
+
+
+
+\chapter{Field Programmable Gate Array (FPGA)}
+%% write some basics about FPGA

@@ -6,7 +6,7 @@
 \usepackage[T1]{fontenc}
 \usepackage[utf8]{inputenc}
 \usepackage[english]{babel}
-
+\usepackage{bm}
 
 \usepackage[bookmarks,		%Lesezeichen für Reader erzeugen
 	pageanchor,		%Inhaltsverzeichnis mit Links
@@ -21,7 +21,7 @@
 	pdfsubject={Bachelorarbeit SS2016},
 	]{hyperref}
 \usepackage{amsmath}
-\usepackage[ngerman,nameinlink]{cleveref}
+\usepackage[english,nameinlink,noabbrev]{cleveref}
 \usepackage{amssymb}
 \usepackage{gensymb}
 \usepackage{pdfpages}
@@ -49,7 +49,7 @@
 \usepackage{newunicodechar}
 \usepackage{lastpage}
 \usepackage{import}
-\newunicodechar{ß}{{\ss{}}}
+%\newunicodechar{ß}{{\ss{}}}
 \usepackage[normalem]{ulem}
 \usepackage{rubfonts2009}
 \usepackage[autostyle=true]{csquotes}
@@ -57,7 +57,7 @@
 %\usepackage[europeanresistors]{circuitikz}
 \usepackage{pgfplots}
 \usepackage{pgfplotstable}
-\usetikzlibrary{shapes, arrows.meta, positioning, decorations.pathmorphing, math, calc}
+\usetikzlibrary{shapes, arrows.meta, positioning, decorations.pathmorphing, math, calc, fit, chains}
 \sisetup{per-mode=symbol} 
 
 \tikzset{

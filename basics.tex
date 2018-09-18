@@ -6,8 +6,7 @@
 
 For modern communications systems reliable data transmission and storage ist required. To achieve this goal usually error correcting codes are used. There are different possible codes available for error correction, but I will restrain myself to LDPC\cite{Ga63} codes in this thesis. As these codes can archive good performance and can be used at large block lengths\cite{TaSc2017}. This is especially useful for use with NAND based solid state drives.
 
-When describing a block code there are important parameters as the message length $k$. The message is what is given into the encoder and the result from the decoder.
-, the block length $n$, and the rate $R = k / n$. 
+When describing a block code there are important parameters as the message length $k$. The message is what is given into the encoder and the result from the decoder. The block length $n$ is the length of the encoded message which is transmitted over the channel.And the rate $R = k / n$. 
 
 
 \section{Low-Density Parity-Check (LDPC) Codes}
@@ -79,7 +78,13 @@ Instead of using the Tanner graph one can also use a matrix representation. In t
 	\end{matrix}\right] \label{ldpc_mat}
 \end{equation}
 
+\subsection{Encoding}
+\subsubsection{Genrator Matrix}
+For encoding the probably simplest algorithm is transforming the parity check matrix into systematic form $\bm{H} = \left[\begin{matrix} \bm{-A^T} & \bm{I_{n-k}}\end{matrix}\right]$. Where $\bm{I_{n-k}}$ is a $n-k \times n - k$ identity matrix and $\bm{A}$ has $k \times n - k$ elements. To archive this form one could for example use gaussian elimination. With $\bm{A}$ known I can construct the generator matrix $\bm{G} = \left[\begin{matrix} \bm{I_{k}} & \bm{A} \end{matrix}\right]$. Now encoding can be done with a simple matrix multiplication. With $u$ the information word and $v$ the code word is given by $v = u \bm{G}$. 
 
+The main disadvantage of this strategy is the high computational complexity. When transforming the parity check matrix into systematic form we have a complexity of $\mathcal{O}(n^3)$. This is not to bad as it will mostly be done offline and only the $\bm{G}$ matrix stored in the encoder, but the bigger problem is that due to the gaussian elimination the matrix is no longer sparse. Thus the matrix multiplication will result in a complexity of $\mathcal{O}(n^2)$\cite{QiGo07}.
 
+\subsubsection{Approximate Lower Triangular Form}
+%woop
 \chapter{Field Programmable Gate Array (FPGA)}
-%% write some basics about FPGA
+\todo{write some basics about FPGA}

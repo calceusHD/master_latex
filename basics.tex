@@ -6,7 +6,7 @@
 
 For modern communications systems reliable data transmission and storage ist required. To achieve this goal usually error correcting codes are used. There are different possible codes available for error correction, but I will restrain myself to LDPC\cite{Ga63} codes in this thesis. As these codes can archive good performance and can be used at large block lengths\cite{TaSc2017}. This is especially useful for use with NAND based solid state drives.
 
-When describing a block code there are important parameters as the message length $k$. The message is what is given into the encoder and the result from the decoder. The block length $n$ is the length of the encoded message which is transmitted over the channel.And the rate $R = k / n$. 
+When describing a block code there are important parameters as the message length $k$. The message is what is given into the encoder and the result from the decoder. The block length $n$, and the rate $R = k / n$. 
 
 
 \section{Low-Density Parity-Check (LDPC) Codes}
@@ -80,11 +80,74 @@ Instead of using the Tanner graph one can also use a matrix representation. In t
 
 \subsection{Encoding}
 \subsubsection{Genrator Matrix}
-For encoding the probably simplest algorithm is transforming the parity check matrix into systematic form $\bm{H} = \left[\begin{matrix} \bm{-A^T} & \bm{I_{n-k}}\end{matrix}\right]$. Where $\bm{I_{n-k}}$ is a $n-k \times n - k$ identity matrix and $\bm{A}$ has $k \times n - k$ elements. To archive this form one could for example use gaussian elimination. With $\bm{A}$ known I can construct the generator matrix $\bm{G} = \left[\begin{matrix} \bm{I_{k}} & \bm{A} \end{matrix}\right]$. Now encoding can be done with a simple matrix multiplication. With $u$ the information word and $v$ the code word is given by $v = u \bm{G}$. 
+For encoding the probably simplest algorithm is transforming the parity check matrix into systematic form $\bm{H} = \left[\begin{matrix} \bm{-A^T} & \bm{I_{n-k}}\end{matrix}\right]$. Where $\bm{I_{n-k}}$ is a $n-k \times n - k$ identity matrix and $\bm{A}$ has $k \times n - k$ elements. To archive this form one could for example use gaussian elimination. With $\bm{A}$ known we can construct the generator matrix $\bm{G} = \left[\begin{matrix} \bm{I_{k}} & \bm{A} \end{matrix}\right]$. Now encoding can be done with a simple matrix multiplication. With $u$ the information word and $v$ the code word is given by $v = u \bm{G}$.
 
-The main disadvantage of this strategy is the high computational complexity. When transforming the parity check matrix into systematic form we have a complexity of $\mathcal{O}(n^3)$. This is not to bad as it will mostly be done offline and only the $\bm{G}$ matrix stored in the encoder, but the bigger problem is that due to the gaussian elimination the matrix is no longer sparse. Thus the matrix multiplication will result in a complexity of $\mathcal{O}(n^2)$\cite{QiGo07}.
+Take for example the matrix from \cref{ldpc_mat}. If we use gaussian elimination to bring the right side to identity we are left with \cref{ldpc_ident}. Now we take the left part of the matrix and transpose it to get $\bm{A}$. With we build $\bm{G}$ in \cref{ldpc_gen}.
+
+\begin{align}
+	\bm{H} = \left[\begin{matrix}
+		0 & 1 & 0 & 1 & 1 & 0 & 0 & 0 \\
+		1 & 1 & 1 & 0 & 0 & 1 & 0 & 0 \\
+		1 & 1 & 0 & 0 & 0 & 0 & 1 & 0 \\
+		0 & 0 & 0 & 0 & 0 & 0 & 0 & 1
+	\end{matrix} \right] \label{ldpc_ident} \\
+	\bm{G} = \left[\begin{matrix}
+		0 & 1 & 1 & 0 & 1 & 0 & 0 & 0 \\
+ 		1 & 1 & 1 & 0 & 0 & 1 & 0 & 0 \\
+ 		0 & 1 & 0 & 0 & 0 & 0 & 1 & 0 \\
+ 		1 & 0 & 0 & 0 & 0 & 0 & 0 & 1
+	\end{matrix} \right] \label{ldpc_gen}
+\end{align}
+
+The main disadvantage of this strategy is the high computational complexity. When transforming the parity check matrix into systematic form we have a complexity of $\mathcal{O}(n^3)$. This is not to bad as it will mostly be done offline and only the $\bm{G}$ matrix stored in the encoder, but the bigger problem is that due to the gaussian elimination the matrix is no longer sparse. Thus the matrix multiplication will result in a complexity of $\mathcal{O}(n^2)$\cite{QiGo07}. 
 
 \subsubsection{Approximate Lower Triangular Form}
-%woop
+\cite{RiUr01} describe a way to reorder the parity check matrix to reduce the encoding complexity. They bring the matrix into a so called approximate lower triangular form. This is done by only doing row and column permutation, so the low density of the matrix is kept.
+
+\begin{figure}
+	\begin{tikzpicture}[
+		style1/.style={
+				matrix of math nodes,
+				every node/.append style={text width=#1,align=center,minimum height=3ex},
+				nodes in empty cells,
+				left delimiter=[,
+				right delimiter=],
+			}
+		]
+		\matrix[style1=0.3cm] (1mat) {
+			& & & & & & & & & & & & & & & \\
+			& & & & & & & & & & & & & & & \\
+			& & & & & & & & & & & & & & & \\
+			& & & & & & & & & & & & & & & \\
+			& & & & & & & & & & & & & & & \\
+			& & & & & & & & & & & & & & & \\
+			& & & & & & & & & & & & & & & \\
+			& & & & & & & & & & & & & & & \\
+		};
+		\draw[dashed] (1mat-5-1.south west) -- (1mat-5-16.south east);
+		\draw[dashed] (1mat-1-11.north east) -- (1mat-8-11.south east);
+		\draw[dashed] (1mat-1-8.north east) -- (1mat-8-8.south east);
+
+		\node [font=\Large] at ($(1mat-3-4)!0.5!(1mat-3-5)$) {A};
+		\node [font=\Large] at (1mat-3-10) {B};
+
+		\node [font=\Large] at (1mat-4-13) {T};
+		\node [font=\Large] at (1mat-2-15) {0};
+
+		\node [font=\Large] at ($(1mat-7-4)!0.5!(1mat-7-5)$) {C};
+		\node [font=\Large] at (1mat-7-10) {D};
+
+		\node at (1mat-1-12) {1};
+		\node at (1mat-2-13) {1};
+		\node at (1mat-3-14) {1};
+		\node at (1mat-4-15) {1};
+		\node at (1mat-5-16) {1};
+		
+
+
+	\end{tikzpicture}
+	\centering
+\end{figure}
+
 \chapter{Field Programmable Gate Array (FPGA)}
 \todo{write some basics about FPGA}

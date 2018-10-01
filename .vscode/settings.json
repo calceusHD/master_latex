@@ -3,6 +3,9 @@
         "FPGA",
         "Gallager",
         "LDPC",
-        "NAND"
+        "NAND",
+        "precomputed",
+        "reprogrammable",
+        "submatrices"
     ]
 }

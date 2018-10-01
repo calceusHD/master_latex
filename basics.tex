@@ -102,16 +102,13 @@ Take for example the matrix from \cref{ldpc_mat}. If we use gaussian elimination
 The main disadvantage of this strategy is the high computational complexity. When transforming the parity check matrix into systematic form we have a complexity of $\mathcal{O}(n^3)$. This is not to bad as it will mostly be done offline and only the $\bm{G}$ matrix stored in the encoder, but the bigger problem is that due to the gaussian elimination the matrix is no longer sparse. Thus the matrix multiplication will result in a complexity of $\mathcal{O}(n^2)$\cite{QiGo07}. 
 
 \subsubsection{Approximate Lower Triangular Form}
-\cite{RiUr01} describe a way to reorder the parity check matrix to reduce the encoding complexity. They bring the matrix into a so called approximate lower triangular form. This is done by only doing row and column permutation, so the low density of the matrix is kept.
-
+Richardson and Urbanke\cite{RiUr01} describe a way to reorder the parity check matrix to reduce the encoding complexity. They bring the matrix into a so called approximate lower triangular form. This is done by only doing row and column permutation, so the low density of the matrix is kept. The resulting structure of the matrix is shown in \cref{alt_mat}. Especially advantageous is the reduced complexity for encoding, here the encoding complexity is reduced from $\mathcal{O}(n^2)$ to $\mathcal{O}(n + g^2)$, where $g$ is the gap. This gap is the number of rows that cannot be brought into triangular form, as seen in \cref{alt_mat}. We can also write
 \begin{figure}
 	\begin{tikzpicture}[
 		style1/.style={
 				matrix of math nodes,
 				every node/.append style={text width=#1,align=center,minimum height=3ex},
 				nodes in empty cells,
-				left delimiter=[,
-				right delimiter=],
 			}
 		]
 		\matrix[style1=0.3cm] (1mat) {
@@ -128,14 +125,15 @@ The main disadvantage of this strategy is the high computational complexity. Whe
 		\draw[dashed] (1mat-1-11.north east) -- (1mat-8-11.south east);
 		\draw[dashed] (1mat-1-8.north east) -- (1mat-8-8.south east);
 
-		\node [font=\Large] at ($(1mat-3-4)!0.5!(1mat-3-5)$) {A};
-		\node [font=\Large] at (1mat-3-10) {B};
+		\node [font=\Large] at ($(1mat-3-4)!0.5!(1mat-3-5)$) {$\bm{A}$};
+		\node [font=\Large] at (1mat-3-10) {$\bm{B}$};
 
-		\node [font=\Large] at (1mat-4-13) {T};
-		\node [font=\Large] at (1mat-2-15) {0};
+		\node [font=\Large] at (1mat-4-13) {$\bm{T}$};
+		\node [font=\Large] at (1mat-2-15) {$\bm{0}$};
 
-		\node [font=\Large] at ($(1mat-7-4)!0.5!(1mat-7-5)$) {C};
-		\node [font=\Large] at (1mat-7-10) {D};
+		\node [font=\Large] at ($(1mat-7-4)!0.5!(1mat-7-5)$) {$\bm{C}$};
+		\node [font=\Large] at (1mat-7-10) {$\bm{D}$};
+		\node [font=\Large] at (1mat-7-14) {$\bm{E}$};
 
 		\node at (1mat-1-12) {1};
 		\node at (1mat-2-13) {1};
@@ -143,11 +141,86 @@ The main disadvantage of this strategy is the high computational complexity. Whe
 		\node at (1mat-4-15) {1};
 		\node at (1mat-5-16) {1};
 		
+		\draw (1mat-1-1.north west) -- (1mat-8-1.south west);
+		\draw (1mat-1-16.north east) -- (1mat-8-16.south east);
+		\draw (1mat-1-1.north west) -- (1mat-1-16.north east);
+		\draw (1mat-8-1.south west) -- (1mat-8-16.south east);
+
+		\draw [<->] ([yshift=-3mm]1mat-8-1.south west) -- node[below] {$n$} ([yshift=-3mm]1mat-8-16.south east);
+		\draw [<->] ([xshift=-3mm]1mat-1-1.north west) -- node[left] {$m$} ([xshift=-3mm]1mat-8-1.south west);
+
+		\draw [<->] ([yshift=3mm]1mat-1-1.north west) -- node[above] {$n-m$} ([yshift=3mm]1mat-1-8.north east);
+		\draw [<->] ([yshift=3mm]1mat-1-9.north west) -- node[above] {$g$} ([yshift=3mm]1mat-1-11.north east);
+		\draw [<->] ([yshift=3mm]1mat-1-12.north west) -- node[above] {$m-g$} ([yshift=3mm]1mat-1-16.north east);
+
+		\draw [<->] ([xshift=3mm]1mat-1-16.north east) -- node[right] {$m-g$} ([xshift=3mm]1mat-5-16.south east);
+		\draw [<->] ([xshift=3mm]1mat-6-16.north east) -- node[right] {$g$} ([xshift=3mm]1mat-8-16.south east);
 
 
 	\end{tikzpicture}
 	\centering
+	\caption{Structure of a matrix in approximate lower triangular form.}
+	\label{alt_mat}
 \end{figure}
+\begin{equation}
+	\bm{H} = \left[\begin{matrix}
+		\bm{A} & \bm{B} & \bm{T} \\
+		\bm{C} & \bm{D} & \bm{E}
+	\end{matrix} \right]
+	\label{alt_subs}
+\end{equation}
+the submatrices all have the dimensions given in \cref{alt_mat}. By multiplying \cref{alt_subs} with
+\begin{equation}
+	\left[\begin{matrix}
+		\bm{I} & \bm{0} \\
+		-\bm{E}\bm{T}^{-1} & \bm{I}
+	\end{matrix} \right]
+\end{equation}
+the resulting matrix is
+\begin{equation}
+	\left[\begin{matrix}
+		\bm{A} & \bm{B} & \bm{T} \\
+		-\bm{E}\bm{T}^{-1}\bm{A} + \bm{C} & -\bm{E}\bm{T}^{-1}\bm{B} + \bm{D} & \bm{0}
+	\end{matrix}\right]
+\end{equation}
+. By splitting the codeword into three parts $c = \left[\begin{matrix}s & p_1 & p_2\end{matrix}\right]$ and applying the definition for valid code words $\bm{H}^T = \bm{0}$. It splits into
+\begin{align}
+	\bm{A}s^T + \bm{B}p_1^T + \bm{T}p_2^T & = 0	\\
+	\left(-\bm{E}\bm{T}^{-1}\bm{A} + \bm{C}\right)s^T + \left(-\bm{E}\bm{T}^{-1}\bm{B} + \bm{D}\right)p^T & = 0
+\end{align}
+. The resulting equations for $p_1$ and $p_2$ are
+\begin{align}
+	p_1^T & = -\bm{\phi}^{-1}\left(-\bm{E}\bm{T}^{-1}\bm{A} + \bm{C}\right)s^T \label{p1_calc}\\
+	p_2^T & = -\bm{T}^{-1}\left(\bm{A}s^T + \bm{B}p_1^T\right) \label{p2_calc}
+\end{align}
+. The complexity of the computations can be reduced by computing $\bm{\phi}^{-1}$ offline. Offline meaning that it is precomputed and when encoding multiplying by the matrix. All the other matrix multiplications from \cref{p1_calc,p2_calc} are done separately. Multiplications by $\bm{A}$, $\bm{B}$, $\bm{C}$, and $\bm{E}$ are sparse and the resulting complexity for these is $\mathcal{O}(n)$. The multiplication with $\bm{T}^{-1}$ is replaced by the system $x^T = \bm{T}y^T$. As $\bm{T}$ is a sparse lower triangular matrix the system can be solved by back substitution in $\mathcal{O}(n)$. The only part with higher complexity is the multiplication with the dense $g\times g$ matrix $\bm{\phi}$ where the complexity is $\mathcal{O}(g^2)$. 
+
+\begin{table}
+	\begin{tabular}{l l}
+		Operation & Type \\ \toprule
+		$\bm{A}s^T$ & sparse multiplication \\
+		$\bm{T}^{-1}\bm{A}s^T$ & sparse back substitution \\
+		$-\bm{E}\bm{T}^{-1}\bm{A}s^T$ & sparse multiplication \\
+		$\bm{C}s^T$ & sparse multiplication \\
+		$\left(-\bm{E}\bm{T}^{-1}\bm{A}s^T\right) + \left(\bm{C}s^T\right)$ & vector addition \\
+		$\bm{\phi}^{-1}\left(-\bm{E}\bm{T}^{-1}\bm{A}s^T + \bm{C}s^T\right)$ & dense $g\times g$ multiplication\\
+	\end{tabular}
+	\centering
+	\caption{Calculations for $p_1^T = \bm{\phi}^{-1}\left(-\bm{E}\bm{T}^{-1}\bm{A} + \bm{C}\right)s^T$}
+\end{table}
+\begin{table}
+	\begin{tabular}{l l}
+		Operation & Type \\ \toprule
+		$\bm{A}s^T$ & sparse multiplication \\
+		$\bm{B}p_1^T$ & sparse multiplication \\
+		$\left(\bm{A}s^T\right) + \left(\bm{B}p_1^T\right)$ & vector addition \\
+		$-\bm{T}^{-1}\left(\bm{A}s^T + \bm{B}p_1^T\right)$ & sparse back substitution \\
+	\end{tabular}
+	\centering
+	\caption{Calculations for $p_2^T = -\bm{T}^{-1}\left(\bm{A}s^T + \bm{B}p_1^T\right)$}
+\end{table}
+\todo{do i want do describe the algorithm to get into alt form?}
 
 \chapter{Field Programmable Gate Array (FPGA)}
+In modern hardware design it is advantageous to have reprogrammable hardware elements. To create reconfigurable logic circuits basic elements consisting of lookup tables (LUT) and registers is built into an array and connected by programmable interconnects.
 \todo{write some basics about FPGA}

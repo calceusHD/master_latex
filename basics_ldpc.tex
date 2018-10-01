@@ -1,6 +1,9 @@
 % !TeX root = main.tex
 % !TeX spellcheck = de_DE
 % !TeX encoding = utf8
+% !TeX root = main.tex
+% !TeX spellcheck = de_DE
+% !TeX encoding = utf8
 
 \chapter{Error Correcting Codes}
 
@@ -66,7 +69,7 @@ The following section will describe LDPC codes invented by Robert Gallager\cite{
 	\label{tanner_ex}
 \end{figure}
 
-Instead of using the Tanner graph one can also use a matrix representation. In this matrix the ones represent the edges of the graph. Usually for a LDPC code the matrix is sparse or low density as the name implies. In \cref{ldpc_mat} a matrix representing the same code as in the graph in \cref{tanner_ex} is shown. The $\bm{H}$ matrix is of size $(n-k) x n$. And the possible code words are given by the null space of $\bm{H}$, so in other words $c$ is a code word if and only if $c\bm{H}^T = \bm{0}$\cite{RiUr01}.
+Instead of using the Tanner graph one can also use a matrix representation. In this matrix the ones represent the edges of the graph. Usually for a LDPC code the matrix is sparse or low density as the name implies. In \cref{ldpc_mat} a matrix representing the same code as in the graph in \cref{tanner_ex} is shown. The $\bm{H}$ matrix is of size $(n-k) \times n$. And the possible code words are given by the null space of $\bm{H}$, so in other words $c$ is a code word if and only if $c\bm{H}^T = \bm{0}$\cite{RiUr01}.
 
 
 \begin{equation}
@@ -76,6 +79,16 @@ Instead of using the Tanner graph one can also use a matrix representation. In t
 		0 & 0 & 1 & 0 & 0 & 1 & 1 & 1 \\
 		1 & 0 & 0 & 1 & 1 & 0 & 1 & 0
 	\end{matrix}\right] \label{ldpc_mat}
+\end{equation}
+
+\subsection{Quasicyclic LDPC (QC-LDPC) codes}
+LDPC codes can be difficult to implement, especially randomly generated ones. On the other hand structured codes can be devised to be more easily implemented. One class of these structured codes are quasicyclic LDPC codes. In these codes the parity check matrix is only built from circulant matrices and zero matrices\cite{Fo04}. The circulant matrices are defined by their first row as the following rows are the first one shifted. The base matrix specifies where zero matrices and where rotated circulant matrices are placed. Each circulant matrix has size $p\times$. The parity check matrix has size $(n-k) \times n = p (N - K) \times p N$. Thus the base matrix $\bm{B}$ has $(N - K) \times N$ entries. Often times the circulant matrix is the identity matrix and is rotated by the corresponding amount in the base matrix.
+\begin{equation}
+	\bm{B} = \left[\begin{matrix}
+		& & & \\
+		& & & \\
+		& & & \\
+	\end{matrix}\right]
 \end{equation}
 
 \subsection{Encoding}
@@ -219,8 +232,9 @@ the resulting matrix is
 	\centering
 	\caption{Calculations for $p_2^T = -\bm{T}^{-1}\left(\bm{A}s^T + \bm{B}p_1^T\right)$}
 \end{table}
-\todo{do i want do describe the algorithm to get into alt form?}
+\todo{do i want do describe the algorithm to get into alt form? yes!}
 
-\chapter{Field Programmable Gate Array (FPGA)}
-In modern hardware design it is advantageous to have reprogrammable hardware elements. To create reconfigurable logic circuits basic elements consisting of lookup tables (LUT) and registers is built into an array and connected by programmable interconnects.
-\todo{write some basics about FPGA}
+\subsection{Decoding}
+Decoding LDPC codes is a nontrivial problem, in fact maximum likelihood decoding is computationally infeasible. Therefore other decoding methods were developed. 
+
+\todo{decode dat }

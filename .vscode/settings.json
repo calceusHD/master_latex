@@ -4,7 +4,9 @@
         "Gallager",
         "LDPC",
         "NAND",
+        "circulant",
         "precomputed",
+        "quasicyclic",
         "reprogrammable",
         "submatrices"
     ]

@@ -1,10 +1,12 @@
 {
     "cSpell.words": [
+        "AWGN",
         "FPGA",
         "Gallager",
         "LDPC",
         "NAND",
         "circulant",
+        "memoryless",
         "precomputed",
         "quasicyclic",
         "reprogrammable",

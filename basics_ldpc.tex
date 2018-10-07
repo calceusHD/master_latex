@@ -11,6 +11,15 @@ For modern communications systems reliable data transmission and storage ist req
 
 When describing a block code there are important parameters as the message length $k$. The message is what is given into the encoder and the result from the decoder. The block length $n$, and the rate $R = k / n$. 
 
+In this case error correction code are used to add additional information to data to allow errors. The errors are then corrected with that information. The addition of additional information is also called redundancy. With this redundancy it is possible to lose information while data is transmitted over a channel and decode it after the channel. After decoding the original data is recovered by using the additional information. \cref{channel_basic} shows such a system where information is transmitted, the channel can be of different type. It can for example be a wireless transmission or memory where information is first stored and later read back. 
+
+\begin{figure}
+	\includegraphics[width=10cm]{information_channel.png}
+	
+	\centering
+	\caption{A basic channel where information is transmitted}	
+	\label{channel_basic}
+\end{figure}
 
 \section{Low-Density Parity-Check (LDPC) Codes}
 
@@ -82,18 +91,36 @@ Instead of using the Tanner graph one can also use a matrix representation. In t
 \end{equation}
 
 \subsection{Quasicyclic LDPC (QC-LDPC) codes}
-LDPC codes can be difficult to implement, especially randomly generated ones. On the other hand structured codes can be devised to be more easily implemented. One class of these structured codes are quasicyclic LDPC codes. In these codes the parity check matrix is only built from circulant matrices and zero matrices\cite{Fo04}. The circulant matrices are defined by their first row as the following rows are the first one shifted. The base matrix specifies where zero matrices and where rotated circulant matrices are placed. Each circulant matrix has size $p\times$. The parity check matrix has size $(n-k) \times n = p (N - K) \times p N$. Thus the base matrix $\bm{B}$ has $(N - K) \times N$ entries. Often times the circulant matrix is the identity matrix and is rotated by the corresponding amount in the base matrix.
+LDPC codes can be difficult to implement, especially randomly generated ones. On the other hand structured codes can be devised to be more easily implemented. One class of these structured codes are quasicyclic LDPC codes. In these codes the parity check matrix is only built from circulant matrices and zero matrices\cite{Fo04}. The circulant matrices are defined by their first row as the following rows are the first one shifted. The base matrix specifies where zero matrices and where rotated circulant matrices are placed. Each circulant matrix has size $p\times$. The parity check matrix has size $(n-k) \times n = p (N - K) \times p N$. Thus the base matrix $\bm{B}$ has $(N - K) \times N$ entries. Often times the circulant matrix is the identity matrix and is rotated by the corresponding amount in the base matrix. In this base matrix the elements can be either a shift factor smaller that the circulant size $0 \leq b_{ij} < p$ or $-1$ representing a zero matrix.
+
+In the following example the circulant matrix is a $5\times 5$ identity matrix. 
 \begin{equation}
 	\bm{B} = \left[\begin{matrix}
-		& & & \\
-		& & & \\
-		& & & \\
+		-1 & 0 & 2 & -1\\
+		0 & 1 & -1 & -1\\
+		-1 & 1 & 0 & 2\\
 	\end{matrix}\right]
 \end{equation}
+After the expansion the matrix looks like this:
+\setcounter{MaxMatrixCols}{20}
+\begin{equation}
+	\bm{H} = \left[\begin{matrix}
+		0 & 0 & 0 & 1 & 0 & 0 & 0 & 0 & 1 & 0 & 0 & 0 \\
+		0 & 0 & 0 & 0 & 1 & 0 & 1 & 0 & 0 & 0 & 0 & 0 \\
+		0 & 0 & 0 & 0 & 0 & 1 & 0 & 1 & 0 & 0 & 0 & 0 \\
+		1 & 0 & 0 & 0 & 1 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+		0 & 1 & 0 & 0 & 0 & 1 & 0 & 0 & 0 & 0 & 0 & 0 \\
+		0 & 0 & 1 & 1 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+		0 & 0 & 0 & 0 & 1 & 0 & 1 & 0 & 0 & 0 & 0 & 1 \\
+		0 & 0 & 0 & 0 & 0 & 1 & 0 & 1 & 0 & 1 & 0 & 0 \\
+		0 & 0 & 0 & 1 & 0 & 0 & 0 & 0 & 1 & 0 & 1 & 0 \\		
+	\end{matrix}\right]
+\end{equation}
+\todo{more qc specifics?}
 
 \subsection{Encoding}
 \subsubsection{Genrator Matrix}
-For encoding the probably simplest algorithm is transforming the parity check matrix into systematic form $\bm{H} = \left[\begin{matrix} \bm{-A^T} & \bm{I_{n-k}}\end{matrix}\right]$. Where $\bm{I_{n-k}}$ is a $n-k \times n - k$ identity matrix and $\bm{A}$ has $k \times n - k$ elements. To archive this form one could for example use gaussian elimination. With $\bm{A}$ known we can construct the generator matrix $\bm{G} = \left[\begin{matrix} \bm{I_{k}} & \bm{A} \end{matrix}\right]$. Now encoding can be done with a simple matrix multiplication. With $u$ the information word and $v$ the code word is given by $v = u \bm{G}$.
+For encoding the probably simplest algorithm is transforming the parity check matrix into systematic form $\bm{H} = \left[\begin{matrix} \bm{-A^T} & \bm{I_{n-k}}\end{matrix}\right]$. Where $\bm{I_{n-k}}$ is a $n-k \times n - k$ identity matrix and $\bm{A}$ has $k \times n - k$ elements. To archive this form one could for example use gaussian elimination. With $\bm{A}$ known we can construct the generator matrix $\bm{G} = \left[\begin{matrix} \bm{I_{k}} & \bm{A} \end{matrix}\right]$. Now encoding can be done with a simple matrix multiplication. With $u$ the information word and $v$ the code word is given by $v = \bm{G}u$.
 
 Take for example the matrix from \cref{ldpc_mat}. If we use gaussian elimination to bring the right side to identity we are left with \cref{ldpc_ident}. Now we take the left part of the matrix and transpose it to get $\bm{A}$. With we build $\bm{G}$ in \cref{ldpc_gen}.
 
@@ -235,6 +262,7 @@ the resulting matrix is
 \todo{do i want do describe the algorithm to get into alt form? yes!}
 
 \subsection{Decoding}
-Decoding LDPC codes is a nontrivial problem, in fact maximum likelihood decoding is computationally infeasible. Therefore other decoding methods were developed. 
+Decoding LDPC codes is a nontrivial problem, in fact maximum likelihood decoding is computationally infeasible. Therefore other decoding methods were developed. There are different decoding algorithms which differ in performance and complexity.
 
 \todo{decode dat }
+

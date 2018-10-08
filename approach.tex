@@ -3,3 +3,4 @@
 % !TeX encoding = utf8
 
 \chapter{Approach}
+My architecture is somewhat based on  Yanhuan Liu, Chun Zhang, Pengcheng Song, and Hanjun Jiang\cite{LiZh17} paper. Although I change the stored values. For a message parsing LDPC decoder the straightforward implementation is to store the messages sent between the check and parity nodes. This results in needing to store multiple values per row of the parity check matrix. For example the LDPC code used for 802.11n with block length 1926\todo{find nice source for 802.11n codes} and rate 0.5 has row weights of 7 and 8. This requires to store 8 messages per row of the parity check matrix. The approach I chose is only suited to the min-sum algorithm and will result in a reduction of storage requirements. Instead of splitting the iteration at the message step it is in this case preferable to split at the minimum and the sum for the variable node calculation.

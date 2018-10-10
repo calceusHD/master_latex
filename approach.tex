@@ -4,3 +4,37 @@
 
 \chapter{Approach}
 My architecture is somewhat based on  Yanhuan Liu, Chun Zhang, Pengcheng Song, and Hanjun Jiang\cite{LiZh17} paper. Although I change the stored values. For a message parsing LDPC decoder the straightforward implementation is to store the messages sent between the check and parity nodes. This results in needing to store multiple values per row of the parity check matrix. For example the LDPC code used for 802.11n with block length 1926\todo{find nice source for 802.11n codes} and rate 0.5 has row weights of 7 and 8. This requires to store 8 messages per row of the parity check matrix. The approach I chose is only suited to the min-sum algorithm and will result in a reduction of storage requirements. Instead of splitting the iteration at the message step it is in this case preferable to split at the minimum and the sum for the variable node calculation.
+
+For decoding the are two message types. The message from the variable nodes to the check nodes $q_{nm}$ and the message going the other way $r_{nm}$. Decoding is done in different steps\cite{EmEl14}:
+
+\begin{enumerate}
+\item{Initialization}\\
+The values from the channel are converted to LLRs $y_n$. These initial LLR values used as $q_{nm}$ the input to the first check node.
+
+\item{Check Node Step}\\
+Each check node $m$ receives the messages from the variable nodes and calculates its response message.
+\begin{equation}
+    r_{mn} = \left( \prod_{n' \in vn\{m\}\\n}\sign(q_{n'm}) \right) \min_{n' \in vn\{m\}\\n}(\left|q_{n'm}\right|)
+\end{equation}
+
+\item{Variable node step}\\
+Each variable node $n$ receives the messages from the check nodes and calculates its response message.
+\begin{equation}
+    q_{nm} = y_n + \sum_{m' \in vn(n) \\m}r_{m'n}
+\end{equation}
+
+\item{Output Descision}\\
+The result LLR values are updated.
+\begin{equation}
+    L_n = y_n + \sum_m \in vn(n)
+\end{equation}
+
+\end{enumerate}
+
+Instead of storing all the messages it is also possible to store the sign, the minimum, and the sum over all messages directed to a column of variable nodes. When storing the minimum it is not enough to just store the minimum. This arises due to the fact that each minimum calculation excludes the current check node. Therefore I store the smallest, the second smallest, and the position of the smallest number. If I call the minimum $s$ the second smallest $t$ and the id $k$, I get the check node step split into two:
+
+\begin{align}
+    s & = \min_{n' \in vn(m)}(\left|q_{n'm}\right|) \\
+    t & = \min_{n' \in vn(m)}^2(\left|q_{n'm}\right|) \\
+    k & = \argmin (\left|q_{n'm}\right|)
+\end{align}

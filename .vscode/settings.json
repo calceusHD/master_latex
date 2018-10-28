@@ -4,13 +4,20 @@
         "FPGA",
         "Gallager",
         "LDPC",
+        "LLRs",
         "NAND",
+        "VHDL",
+        "Xilinx",
         "circulant",
         "memoryless",
+        "numpy",
         "performant",
         "precomputed",
         "quasicyclic",
         "reprogrammable",
-        "submatrices"
+        "scipy",
+        "submatrices",
+        "submatrix",
+        "unprogrammed"
     ]
 }

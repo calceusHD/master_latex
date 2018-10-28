@@ -2,7 +2,9 @@
 % !TeX spellcheck = de_DE
 % !TeX encoding = utf8
 
-\chapter{Approach}
+\chapter{Approach} \label{chap_approach}
+\section{Algorithms}
+\subsection{Min Sum Decoding}
 My architecture is somewhat based on  Yanhuan Liu, Chun Zhang, Pengcheng Song, and Hanjun Jiang\cite{LiZh17} paper. Although I change the stored values. For a message parsing LDPC decoder the straightforward implementation is to store the messages sent between the check and parity nodes. This results in needing to store multiple values per row of the parity check matrix. For example the LDPC code used for 802.11n with block length 1926 \todo{find nice source for 802.11n codes}and rate 0.5 has row weights of 7 and 8. This requires to store 8 messages per row of the parity check matrix. The approach I chose is only suited to the min-sum algorithm and will result in a reduction of storage requirements. Instead of splitting the iteration at the message step it is in this case preferable to split at the minimum and the sum for the variable node calculation.
 
 For decoding the are two message types. The message from the variable nodes to the check nodes $q_{nm}$ and the message going the other way $r_{nm}$. Decoding is done in different steps\cite{EmEl14}:
@@ -23,15 +25,22 @@ Each variable node $n$ receives the messages from the check nodes and calculates
     q_{nm} = y_n + \sum_{m' \in N(n)\\ m}r_{m'n}
 \end{equation}
 
-\item{Output Descision}\\
+\item{Output Decision}\\
 The result LLR values are updated.
 \begin{equation}
     L_n = y_n + \sum_{m \in N(n)}r_{m'n}
 \end{equation}
+And the result is calculated.
+\begin{equation}
+    x_n = \begin{cases}
+        1, & \text{for } L_n < 0 \\
+        0, & \text{else}
+    \end{cases}
+\end{equation}
 
 \end{enumerate}
 
-Instead of storing all the messages it is also possible to store the sign, the minimum, and the sum over all messages directed to a column of variable nodes. When storing the minimum it is not enough to just store the minimum. This arises due to the fact that each minimum calculation excludes the current check node. Therefore I store the smallest, the second smallest, and the position of the smallest number. The notation $\min^2$ is for the smallest argument but not including the element $min$ returns. If I call the minimum $s$, the second smallest $t$, the product of all signs $v$, and the id $k$, I get the check node step split into two:
+Instead of storing all the messages it is also possible to store the sign, the minimum, and the sum over all messages directed to a column of variable nodes. When storing the minimum it is not enough to just store the minimum. This arises due to the fact that each minimum calculation excludes the current check node. Therefore I store the smallest, the second smallest, and the position of the smallest number. The notation $\min^2$ is for the smallest argument but not including the element $min$ returns. For example if I want to take the $min^2$ of $\{2, 5, 3, 2\}$ it would result in $2$ as the first $2$ is "used up" by the $min$, but there is another $2$ available. If I call the minimum $s$, the second smallest $t$, the product of all signs $v$, and the id $k$, I get the check node step split into two:
 
 \begin{align}
     s(m) & = \min_{n' \in M(m)}(\left|q_{n'm}\right|) \label{cn_min}\\
@@ -42,7 +51,7 @@ Instead of storing all the messages it is also possible to store the sign, the m
 
 And for the check node calculation I can use the results from \cref{cn_min,cn_min2,cn_min_id,cn_sign} to simplify the calculations for each check node.
 \begin{equation}
-    r_{mn} = v(m) \sign(q_{nm}) c_{mn}
+    r_{mn} = v(m) \sign(q_{nm}) c_{mn} \label{cn_loc}
 \end{equation}
 with
 \begin{equation}
@@ -55,6 +64,95 @@ with
 In the variable node step I instead calculate the sum over all messages:
 
 \begin{equation}
-    S(n) = y_n + \sum_{m \in N(n)}r_{m'n} 
+    S(n) = y_n + \sum_{m \in N(n)}r_{m'n}  \label{vn_sum}
+\end{equation}
+With the help of this sum I can also calculate the messages from the variable nodes to the check nodes.
+\begin{equation}
+    q_{nm} = S(n) - r_{mn} \label{vn_loc}
+\end{equation}
+The result step stays the same:
+\begin{equation}
+    x_n = \begin{cases}
+        1, & \text{for } L_n < 0 \\
+        0, & \text{else}
+    \end{cases}
 \end{equation}
 
+\subsection{Normalized Min Sum}
+In the normalized min sum adaption proposed by Xiaofu Wu, Yue Song, Ming Jiang, and Chunming Zhao\cite{WuSo10} the check node step is replaced by the following equation:
+\begin{equation}
+    r_{mn} = \mu \left( \prod_{n' \in M(m)\\n}\sign(q_{n'm}) \right) \min_{n' \in vn\{m\}\\n}(\left|q_{n'm}\right|)
+\end{equation}
+Where $\mu$ is called a normalization factor. For this factor the exist no analytical results so it has to be determined by simulations.
+
+This changes the calculation for $s(m)$ and $t(m)$ of my version of the algorithm to:
+\begin{align}
+    s(m) & = \mu \min_{n' \in M(m)}(\left|q_{n'm}\right|) \label{cn_min}\\
+    t(m) & = \mu \min_{n' \in M(m)}^2(\left|q_{n'm}\right|) \label{cn_min2}
+\end{align}
+
+\subsection{Adaptive Normalized Min Sum}
+The adaptive algorithm changes the normalization factor so it is dependent on some value in the algorithm. That could for example be the iteration number or like in this case the correct check nodes. THe normalization factor $\mu$ is replaced by $\nu$ where $\nu$ is either $\mu$ or $\mu \eta$. $h_m$ is the $m$th row of $\bm{H}$.
+
+
+\begin{equation}
+    \nu = \begin{cases}
+        \mu, & \text{for } h^T_m \cdot z = 1 \mod 2 \\
+        \mu \eta, & \text{else}
+    \end{cases}
+\end{equation}
+
+\subsection{Offset Min Sum}
+
+\subsection{Adaptive Offset Min Sum}
+
+\section{Hardware Adaptation}
+To build hardware for an LDPC code first I have to decide which approach to take. Either a simpler approach that directly maps all check and variable nodes to hardware or only build part of the nodes in hardware and switch the data to these nodes. First I will show the simpler approach and explain its weakness.
+
+\subsection{Direct Mapping}
+When directly mapping the variable and check nodes to the hardware I instantiate all the variable and check nodes and then connect like the tanner graph. With this construction it is possible to generate fast decoders. The tradeoff is that it will produce a lot of hardware for all variable and check nodes. Also the interconnect between the nodes has a high complexity because of the unstructured parity check matrix.
+
+Each check node requires as many inputs as there are ones in each row of the parity check matrix. The same is true for each column of the parity check matrix and the variable nodes. The total amount of check nodes equals the number of rows in the parity check matrix. Also the number of variable nodes is equal to the number of columns in the parity check matrix.
+
+\begin{figure}
+    make image of the internal structure of a check node
+    \centering
+    \caption{An Example Check Node}
+\end{figure}
+
+\begin{figure}
+    make image of the internal structure of a variable node
+    \centering
+    \caption{An Example Variable Node}
+\end{figure}
+
+\subsection{Quasi Cyclic Codes}
+When dealing with large codes it is preferable to have some structure that can be used to simplify the hardware implementation. Quasi cyclic codes have this property in that each submatrix is a rotated  version of the identity matrix. To implement this I use one set of variable and check nodes sized to submatrix of the parity check matrix. I will take the matrix form \cref{qc_ldpc} and explain how I can use the cyclic structure of the matrix to make the calculations simpler.
+
+To reduce the hardware requirements I use the submatrix structure of the overall parity check matrix. Instead of calculating all check nodes in parallel I compute only a group of the size of a submatrix. For example the first three rows of the matrix in \cref{ex_qc_mat} are calculated in parallel. For each nonzero submatrix of $\bm{H}$ I take the corresponding variable node values and add these into the state of the currently active check nodes. So in this case only the second and third submatrix are nonzero and only for these are the calculations done. 
+
+\begin{equation}
+	\bm{H} = \left[\begin{matrix}
+		0 & 0 & 0 & 1 & 0 & 0 & 0 & 0 & 1 & 0 & 0 & 0 \\
+		0 & 0 & 0 & 0 & 1 & 0 & 1 & 0 & 0 & 0 & 0 & 0 \\
+		0 & 0 & 0 & 0 & 0 & 1 & 0 & 1 & 0 & 0 & 0 & 0 \\
+		1 & 0 & 0 & 0 & 1 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+		0 & 1 & 0 & 0 & 0 & 1 & 0 & 0 & 0 & 0 & 0 & 0 \\
+		0 & 0 & 1 & 1 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+		0 & 0 & 0 & 0 & 1 & 0 & 1 & 0 & 0 & 0 & 0 & 1 \\
+		0 & 0 & 0 & 0 & 0 & 1 & 0 & 1 & 0 & 1 & 0 & 0 \\
+		0 & 0 & 0 & 1 & 0 & 0 & 0 & 0 & 1 & 0 & 1 & 0 \\
+    \end{matrix}\right] \label{ex_qc_mat}
+\end{equation}
+
+The variable node values have to be rearranged depending on the current submatrix. As all the submatrices are shifted identity matrices it is possible to use a barrel shifter to shift all variable node values so that only interconnects for a identity matrix have to be provided. \cref {rot_iden_same} is an example how the data is first rotated and the passed through an identity matrix to get the same result als with a rotated matrix. I use this for the implementation to only have a single interconnect network representing an identity matrix.
+
+\begin{figure}
+    so this should be an image that has a rotated matrix to connect some row of values to the output column and then how rotating and connecting with identity gets the same result.
+    \centering
+    \caption{Rotating and Matrix Connections}
+    \label{rot_iden_same}
+\end{figure}
+
+
+\todo{explain roll mess and how to map QC to FPGA}

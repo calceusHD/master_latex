@@ -90,7 +90,7 @@ Instead of using the Tanner graph one can also use a matrix representation. In t
 	\end{matrix}\right] \label{ldpc_mat}
 \end{equation}
 
-\subsection{Quasicyclic LDPC (QC-LDPC) codes}
+\subsection{Quasicyclic LDPC (QC-LDPC) codes} \label{qc_ldpc}
 LDPC codes can be difficult to implement, especially randomly generated ones. On the other hand structured codes can be devised to be more easily implemented. One class of these structured codes are quasicyclic LDPC codes. In these codes the parity check matrix is only built from circulant matrices and zero matrices\cite{Fo04}. The circulant matrices are defined by their first row as the following rows are the first one shifted. The base matrix specifies where zero matrices and where rotated circulant matrices are placed. Each circulant matrix has size $p\times$. The parity check matrix has size $(n-k) \times n = p (N - K) \times p N$. Thus the base matrix $\bm{B}$ has $(N - K) \times N$ entries. Often times the circulant matrix is the identity matrix and is rotated by the corresponding amount in the base matrix. In this base matrix the elements can be either a shift factor smaller that the circulant size $0 \leq b_{ij} < p$ or $-1$ representing a zero matrix.
 
 In the following example the circulant matrix is a $5\times 5$ identity matrix. 
@@ -113,7 +113,7 @@ After the expansion the matrix looks like this:
 		0 & 0 & 1 & 1 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
 		0 & 0 & 0 & 0 & 1 & 0 & 1 & 0 & 0 & 0 & 0 & 1 \\
 		0 & 0 & 0 & 0 & 0 & 1 & 0 & 1 & 0 & 1 & 0 & 0 \\
-		0 & 0 & 0 & 1 & 0 & 0 & 0 & 0 & 1 & 0 & 1 & 0 \\		
+		0 & 0 & 0 & 1 & 0 & 0 & 0 & 0 & 1 & 0 & 1 & 0 \\
 	\end{matrix}\right]
 \end{equation}
 \todo{more qc specifics?}
@@ -141,7 +141,7 @@ Take for example the matrix from \cref{ldpc_mat}. If we use gaussian elimination
 
 The main disadvantage of this strategy is the high computational complexity. When transforming the parity check matrix into systematic form we have a complexity of $\mathcal{O}(n^3)$. This is not to bad as it will mostly be done offline and only the $\bm{G}$ matrix stored in the encoder, but the bigger problem is that due to the gaussian elimination the matrix is no longer sparse. Thus the matrix multiplication will result in a complexity of $\mathcal{O}(n^2)$\cite{QiGo07}. 
 
-\subsubsection{Approximate Lower Triangular Form}
+\subsubsection{Approximate Lower Triangular Form} \label{alt_enc_alg}
 Richardson and Urbanke\cite{RiUr01} describe a way to reorder the parity check matrix to reduce the encoding complexity. They bring the matrix into a so called approximate lower triangular form. This is done by only doing row and column permutation, so the low density of the matrix is kept. The resulting structure of the matrix is shown in \cref{alt_mat}. Especially advantageous is the reduced complexity for encoding, here the encoding complexity is reduced from $\mathcal{O}(n^2)$ to $\mathcal{O}(n + g^2)$, where $g$ is the gap. This gap is the number of rows that cannot be brought into triangular form, as seen in \cref{alt_mat}. We can also write
 \begin{figure}
 	\begin{tikzpicture}[
@@ -247,6 +247,7 @@ the resulting matrix is
 	\end{tabular}
 	\centering
 	\caption{Calculations for $p_1^T = \bm{\phi}^{-1}\left(-\bm{E}\bm{T}^{-1}\bm{A} + \bm{C}\right)s^T$}
+	\label{p1_steps}
 \end{table}
 \begin{table}
 	\begin{tabular}{l l}
@@ -258,6 +259,7 @@ the resulting matrix is
 	\end{tabular}
 	\centering
 	\caption{Calculations for $p_2^T = -\bm{T}^{-1}\left(\bm{A}s^T + \bm{B}p_1^T\right)$}
+	\label{p2_steps}
 \end{table}
 \todo{do i want do describe the algorithm to get into alt form? yes!}
 
@@ -265,7 +267,7 @@ the resulting matrix is
 Decoding LDPC codes is a nontrivial problem, in fact maximum likelihood decoding is computationally infeasible. Therefore other decoding methods were developed. There are different decoding algorithms which differ in performance and complexity. I will start with a simple algorithm to introduce the required concepts and then go on to more performant ones.
 
 \subsubsection{Hard Descision Decoding}
-This algorithm works on binary input data and all the messages are also binary.
+This algorithm works on binary input data and all the messages are also binary. The decoder basically follows the Tanner graph. All messages are passed along the edges and computations are made on the nodes. 
 
 
 

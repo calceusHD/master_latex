@@ -140,3 +140,20 @@
 \cfoot*{\thepage/\pageref{LastPage}}
 \pagestyle{scrheadings}
 
+\lstdefinelanguage{VHDL}{
+   morekeywords={
+     library,use,all,entity,is,port,in,out,end,architecture,of,
+     begin,and
+   },
+   morecomment=[l]--
+}
+
+\colorlet{keyword}{blue!100!black!80}
+\colorlet{comment}{green!90!black!90}
+\lstdefinestyle{vhdl}{
+   language     = VHDL,
+   basicstyle   = \small\ttfamily,
+   tabsize		= 4,
+   keywordstyle = \color{keyword}\bfseries,
+   commentstyle = \color{comment}
+}

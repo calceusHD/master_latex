@@ -267,9 +267,33 @@ the resulting matrix is
 Decoding LDPC codes is a nontrivial problem, in fact maximum likelihood decoding is computationally infeasible. Therefore other decoding methods were developed. There are different decoding algorithms which differ in performance and complexity. I will start with a simple algorithm to introduce the required concepts and then go on to more performant ones.
 
 \subsubsection{Hard Descision Decoding}
-This algorithm works on binary input data and all the messages are also binary. The decoder basically follows the Tanner graph. All messages are passed along the edges and computations are made on the nodes. 
+This algorithm works on binary input data and all the messages are also binary. The decoder basically follows the Tanner graph. The messages are passed along the edges and computations are made on the nodes.
 
+\begin{enumerate}
+	\item To initialize all variable nodes have only the information of the received bit. So this is the information that is sent to the adjacent check nodes.
+	\item Each check node use the information sent to it to check if the bits sent to it are correct. If all check nodes are correct the algorithm terminates. Otherwise the check nodes calculate an answer to each variable node. This answer is computed by assuming that the information from all check nodes except the one the answer is directed to is correct.
+	\item All variable node use the incoming messages to determine their new value. The new value is for example determined by majority vote of the incoming messages and the current value of the value node.
+	\item Go to step 2.
+\end{enumerate}
 
+\subsubsection{Soft Descision Decoding}
+Instead of working with hard decisions soft decision algorithms work with probabilities. Herein lies the advantage that there is more information given about each bit. So if a probability is close to $0.5$ the an error could be more likely. Algorithms like these are also known as belief propagation algorithms.
 
+\paragraph{Sum Product}
+\begin{enumerate}
+	\item As information all the variable node send the only information they have to the check nodes. The nodes send the probability their bit is "1" to the check nodes. Thsese messages are $q_{nm}$. They are sent from the $n$th variable node to the $m$th check node.
+	\item The check nodes now calculate the message to each variable node using:
+		\begin{align*}
+			r_{mn}(0) & = \frac{1}{2} + \frac{1}{2} \prod_{n' \in M(m) \text{without} n}\left(1 - 2 q_{n'm}(1)\right) \\
+			r_{nm}(1) & = 1 - r{nm}(0)
+		\end{align*}
+		where $r_{mn}$ denotes the message from the $m$th check node to the $n$th variable node.
+	\item Now the variable nodes have all required information to compute their new value.
+		\begin{align*}
+			q_{nm} & = (1 - y_n) K_{nm} \prod_{m' \in N(n) \text{without} m}r_{m'n} \\
+			a & = n
+		\end{align*}
+		where 
+\end{enumerate}
 \todo{decode dat }
 

@@ -1,0 +1,20 @@
+\documentclass[border=1cm]{standalone}
+
+\usepackage{tikz}
+\usepackage{pgfplots}
+\usetikzlibrary{calc}
+
+
+\begin{document}
+\begin{tikzpicture}
+    \begin{semilogyaxis}[xlabel={$E_b / N_0$} in dB, ylabel={Error Rate}]
+        \pgfplotstableread{data/sw_norm_params.dat}\paramopt
+        \foreach \x in {1,...,11} {
+            \addplot table [col sep=tab,x index={0}, y index={\x}] {\paramopt};
+            \pgfplotstablegetcolumnnamebyindex{\x}\of{\paramopt}\to{\colname}
+            \addlegendentryexpanded{Normalization \colname}
+        }
+
+    \end{semilogyaxis}
+\end{tikzpicture}
+\end{document}

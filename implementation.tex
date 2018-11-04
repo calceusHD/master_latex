@@ -28,10 +28,53 @@ I chose to reduce the hardware complexity by splitting both the check node and t
 \todo{write something how the thing is done in vivado and u no the block stuff and how the arm cores are used and so on}
 
 \subsection{Results}
+The simulation implementation of the decoder is written as a Python script I run them and collect the results. To speed up simulation multiple instances of the script are run in parallel using GNU Parallel. This section lists the bit error rates of the different decoder optimizations.
 
 \subsubsection{Min-sum}
+The basic min sum algorithm serves as a baseline for the upcoming improvements. I ran it for two different LDPC codes. Both of them are used by 802.11n for error correction. I chose to use the codes with rate $0.5$ as there is a lot of information available.
+\begin{figure}
+    \begin{tikzpicture}
+        \begin{semilogyaxis}[xlabel={$E_b / N_0$} in dB, ylabel={Error Rate}]
+            \addplot table [col sep=tab,x={{Eb/N0 in dB}}, y={FER 648}] {data/sw_err_simple.dat};
+            \addlegendentry{FER 648}
+            \addplot table [col sep=tab,x={Eb/N0 in dB}, y={BER 648}] {data/sw_err_simple.dat};
+            \addlegendentry{BER 648}
+            \addplot table [col sep=tab,x={{Eb/N0 in dB}}, y={FER 1944}] {data/sw_err_simple.dat};
+            \addlegendentry{FER 1944}
+            \addplot table [col sep=tab,x={Eb/N0 in dB}, y={BER 1944}] {data/sw_err_simple.dat};
+            \addlegendentry{BER 1944}
+        \end{semilogyaxis}
+    \end{tikzpicture}
+    \centering
 
+    LDPC codes from 802.11n all with rate $0.5$.
+    \caption{Frame and Bit Error Rates of the Basic Min Sum Algorithm}
+    \label{min_sum_base}
+\end{figure}
 
+\subsubsection{Normalized Min-sum}
+
+\begin{figure}
+    \begin{tikzpicture}
+        \begin{semilogyaxis}[xlabel={$E_b / N_0$} in dB, ylabel={Error Rate}]
+            \pgfplotstableread{data/sw_norm_params.dat}\paramopt
+            \foreach \x in {1,...,11} {
+                \addplot table [col sep=tab,x index={0}, y index={\x}] {\paramopt};
+                \pgfplotstablegetcolumnnamebyindex{\x}\of{\paramopt}\to{\colname}
+                \addlegendentryexpanded{Normalization \colname}
+            }
+        \end{semilogyaxis}
+    \end{tikzpicture}
+    \centering
+
+    \caption{Bit Error Rates of the Normalized Min Sum Algorithm for Different Normalization Factors}
+    \label{min_sum_base}
+\end{figure}
+
+\subsubsection{Adaptive Normalized Min-sum}
+I was not able to improve the performance of the system by using the adaptive normalized min sum algorithm. The performance was on par with the normalized min sum and almost independent of the suppression parameter. 
+
+optimization with more dimensions?
 
 \section{Hardware}
 For the hardware implementation an FPGA from Xilinx is used. The device is a "ZYNQ™-7000 SOC XC7Z020-CLG484-1". It in a system on a chip consisting of a dual core ARM processor and programmable logic. The decoder is completely implemented in the FPGA logic and the encoder is software running on the ARM cores. I wrote VHDL code for the encoder.
@@ -109,11 +152,76 @@ begin
     end generate;
 end architecture;
 \end{lstlisting}
-but this generates huge hardware. The primary problem is the synthesis generates a division to implement the modulo operations. In the following I will show that the modulo can in this case be replaced by a conditional addition or subtraction. But first I have to set some limits for the inputs. The input has to be in the range $0 \leq$ \lstinline{roll_count} $<$ \lstinline{data_in'length}. From that I know 
+but this generates huge hardware. The primary problem is the synthesis generates a division to implement the modulo operations. In the following I will show that the modulo can in this case be replaced by a conditional addition or subtraction. But first I have to set some limits for the inputs. I only allow roll values in the range $0 \leq$ \lstinline{roll_count} $<$ \lstinline{data_in'length}. From that and the possible values for $i$ I get $0 \leq + $ \lstinline{roll_count} $ < 2$ \lstinline{data_in'length}. Knowing this I can replace the modulo with a conditional addition or subtraction depending on the shift direction. So the lines writing to \lstinline{data_out} are replaced by:
+\begin{lstlisting}
+data_out(i, j) <= data_in(add_mod(i - to_integer(roll_count), data_in'length), j) when not DIRECTION 
+    else data_in(sub_mod(i + to_integer(roll_count), data_in'length), j);
+\end{lstlisting}
 
+\begin{table}
+    \begin{tabular}{l r r}
+        %roll_2 resource utilization with block length 27 and 200
+        Algorithm & 27 Block Length & 200 Block Length \\ \toprule
+        Modulo & 5132 & 101533 \\
+        Sub & 540 &  28229\\
+        MUX2 & 473 & 5600
+    \end{tabular}
+    \centering
+    \caption{LUT Utilization of Different Barrel Roll Implementations}
+    \label{roll_usage}
+\end{table}
+
+Even more efficient in resource usage is a logarithmic barrel shifter. In this design I have shifts by powers of two and either use each shift or bypass it depending on the \lstinline{roll_count} bits. In \cref{log_shift} you can see a block diagram of such an architecture. This design only requires wires and two input muxes. On the used FPGA each LUT can implement a 4 input LUT or multiple LUTs can work together to create muxes with more inputs. I tried the architecture with larger muxes but archived no smaller design. This optimization was probably already done by the synthesis tools and doing it manually did not change the resource usage. The differece between the barrel shifters is more pronounced at larger block sizes as is visible in \cref{roll_usage}.\todo{requrce usage!!}
+
+In \cref{roll_usage} you can see that for the block length of 200 it is not feasible to use the worse algorithm. And modern codes such as one proposed for NG-EPON\cite{wey_3ca_1a_0118} and DVB-S2\cite{ETSI_EN_302_307}.
+
+\begin{figure}
+    \tikzstyle{branch}=[fill,shape=circle,minimum size=3pt,inner sep=0pt]
+    \begin{tikzpicture}[x=1.5cm,y=2cm]
+        \foreach \x in {0,...,7} {
+            \node (r\x) at (\x, 0) {in[\x]};
+            \node (u\x) at (\x, -3.5) {out[\x]};
+            \foreach \y [evaluate=\y as \yn using int(\y-1), evaluate=\x as \xpow using {int(round(Mod(\x+\y,8)))}] in {1,2,3} {
+                \pgfmathsetmacro{\xsh}{int(round(Mod(\x+2^(0),8)))}
+                \pgfmathsetmacro{\poff}{(\x+1) /9}
+                \ifnum\x=1
+                    \node at (-1.5,-\y) {roll\_count[\y]};
+                \fi
+                \node (n\x\y) [draw, minimum width=1cm] at (\x, -\y) {MUX};
+                \ifnum\y=1
+                    
+                    \draw ($(r\x.south)+(0.3cm,0)$) -- ($(n\x\y.north)+(0.3cm,0)$) node [pos=\poff,branch] (m\x\y) {};
+                \else
+                    \ifnum\y=3
+                        \draw($(n\x\y.south)+(0.3cm,0)$) -- ($(u\x.north)+(0.3cm,0)$);
+                    \fi
+                    \draw ($(n\x\yn.south)+(0.3cm,0)$) -- ($(n\x\y.north)+(0.3cm,0)$)  node [pos=\poff,branch] (m\x\y) {};
+                \fi
+            }
+        }
+        \foreach \x in {0,...,7} {
+            \pgfmathsetmacro{\xsh}{int(round(Mod(\x+2^(0),8)))}
+            \foreach \y [evaluate=\y as \yn using int(\y-1), evaluate=\x as \xpow using {int(round(Mod(\x-2^(\y-1),8)))}] in {1,2,3} {
+                \draw ($(n\x\y.north)+(-0.3cm,0)$) |- (m\xpow\y.center);
+            }
+        }
+    \end{tikzpicture}
+    \centering
+    \caption{Structure of a Logarithmic Barrel Shifter}
+    \label{log_shift}
+\end{figure}
+
+\subsection{Interface}
+I used AXI-Stream interfaces to input the LLR values into the decoder and to output the decoded bits. These interfaces transfer the bits tightly packed to maximize throughput. The stream interface is a good fit for this application as decoding is done on full frames and the is no need to change single words after a transfer. Also it is fast to implement.
+
+\subsection{Pipelining}
+If implemented without any pipeline steps the maximum clock for the 648 bits message length, rate $0.5$, and 7 bit LLR is ~27Mhz\todo{check real val}. By adding registers between some steps I reduce the critical path. By adding two stages I increase the maximum clock rate to ~70Mhz\todo{test}. The pipeline stages are added between the local check node and the first barrel roll and after the second barrel roll. These position were determined by check the critical path timing in Vivado and adding registers to achieve a maximum critical path length of 10ns as to get a 100Mhz clock. \todo{i prolly need one after the global check node to get the memory timing better}
 
 \subsection{Possible Improvements}
 More pipelining
 In and output double buffering
 More pipeline stages
 u no dependency optimization
+
+
+circuitry

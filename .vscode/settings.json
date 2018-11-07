@@ -9,6 +9,7 @@
         "VHDL",
         "Xilinx",
         "circulant",
+        "combinatorial",
         "memoryless",
         "numpy",
         "performant",

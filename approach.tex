@@ -40,7 +40,7 @@ And the result is calculated.
 
 \end{enumerate}
 
-Instead of storing all the messages it is also possible to store the sign, the minimum, and the sum over all messages directed to a column of variable nodes. When storing the minimum it is not enough to just store the minimum. This arises due to the fact that each minimum calculation excludes the current check node. Therefore I store the smallest, the second smallest, and the position of the smallest number. The notation $\min^2$ is for the smallest argument but not including the element $min$ returns. For example if I want to take the $min^2$ of $\{2, 5, 3, 2\}$ it would result in $2$ as the first $2$ is "used up" by the $min$, but there is another $2$ available. If I call the minimum $s$, the second smallest $t$, the product of all signs $v$, and the id $k$, I get the check node step split into two:
+Instead of storing all the messages it is also possible to store the sign, the minimum, and the sum over all messages directed to a column of variable nodes. When storing the minimum it is not enough to just store the minimum. This arises due to the fact that each minimum calculation excludes the current check node. Therefore I store the smallest, the second smallest, and the position of the smallest number. The notation $\min^2$ is for the smallest argument but not including the element $min$ returns. For example if I want to take the $min^2$ of $\{2, 5, 3, 2\}$ it would result in $2$ as the first $2$ is "used up" by the $min$, but there is another $2$ available. If I call the minimum $s$, the second smallest element $t$, the product of all signs $v$, and the id $k$, I get the check node step split into two:
 
 \begin{align}
     s(m) & = \min_{n' \in M(m)}(\left|q_{n'm}\right|) \label{cn_min}\\
@@ -87,8 +87,8 @@ Where $\mu$ is called a normalization factor. For this factor the exist no analy
 
 This changes the calculation for $s(m)$ and $t(m)$ of my version of the algorithm to:
 \begin{align}
-    s(m) & = \mu \min_{n' \in M(m)}(\left|q_{n'm}\right|) \label{cn_min}\\
-    t(m) & = \mu \min_{n' \in M(m)}^2(\left|q_{n'm}\right|) \label{cn_min2}
+    s(m) & = \mu \min_{n' \in M(m)}(\left|q_{n'm}\right|) \\
+    t(m) & = \mu \min_{n' \in M(m)}^2(\left|q_{n'm}\right|) 
 \end{align}
 
 \subsection{Adaptive Normalized Min Sum}

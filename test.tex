@@ -2,19 +2,19 @@
 
 \usepackage{tikz}
 \usepackage{pgfplots}
-\usetikzlibrary{calc}
+\usetikzlibrary{calc, positioning}
 
 
 \begin{document}
 \begin{tikzpicture}
-    \begin{semilogyaxis}[xlabel={$E_b / N_0$} in dB, ylabel={Error Rate}]
-        \pgfplotstableread{data/sw_norm_params.dat}\paramopt
-        \foreach \x in {1,...,11} {
-            \addplot table [col sep=tab,x index={0}, y index={\x}] {\paramopt};
-            \pgfplotstablegetcolumnnamebyindex{\x}\of{\paramopt}\to{\colname}
-            \addlegendentryexpanded{Normalization \colname}
-        }
-
-    \end{semilogyaxis}
+    \node [rectangle, draw, minimum width=3cm, minimum height=3cm] {};
+    \node (plus) [rectangle, draw, minimum height=2cm] {+};
+    \node (llr) [above left=0cm and 2cm of plus] {$y_n$};
+    \node (vals) [left=0cm and 2cm of plus] {$r_{mn}$};
+    \node [below=0.2cm of vals] {\vdots};
+    \node (res) [right=2cm of plus] {$S_n$};
+    \draw [->] (plus) -- (res);
+    \draw [->] (vals) -- (plus);
+    \draw [->] (llr) -| ($(llr)!0.6!(plus)$) |- ([yshift=20mm]plus);
 \end{tikzpicture}
 \end{document}

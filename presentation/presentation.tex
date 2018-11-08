@@ -51,7 +51,7 @@
 
 \usepackage[english]{babel}
 \usepackage[utf8]{inputenc}
-\usetikzlibrary{shapes, arrows.meta, positioning, decorations.pathmorphing, math, calc, fit, chains, matrix, decorations.pathreplacing, trees, backgrounds, tikzmark}
+\usetikzlibrary{shapes, arrows.meta, positioning, decorations.pathmorphing, math, calc, fit, chains, matrix, decorations.pathreplacing, trees, backgrounds, tikzmark, decorations.markings}
 %\usetikzlibrary{, , , , , , , ., , , }
 \usepackage{xcolor}
 % \usepackage[table]{xcolor}
@@ -94,6 +94,8 @@
 }
 
 
+\DeclareMathOperator{\sign}{sign}
+\DeclareMathOperator*{\argmin}{arg\,min}
 \graphicspath{ {image/} }
 
 \setbeamercovered{invisible}
@@ -265,17 +267,32 @@
 	\end{tabular}
 \end{frame}
 
+
+
 \begin{frame}
 	\frametitle{Encoding Hardware}
 	\begin{itemize}
 		\item Implemented as combinatorial logic
 		\item Connects to the other modules with an axi stream bus
 		\item Repacking is needed as bit counts dont evenly divide
+		\item Encoder is generated from the QC PCM with Python scripts
 	\end{itemize}
-	\begin{itemize}
-		\item make image with
-		\item axi-stream to repack to encode to repack to axi-stream
-	\end{itemize}
+	For wifi ldpc with rate 0.5 it looks like this
+	\begin{tikzpicture}[
+		int/.style={draw,rectangle,node distance=.5cm,align=center,minimum width=.5cm, minimum height=.5cm},
+		bitw/.style={decoration={markings,mark=at position 0.5 with{\node[transform shape] (tempnode) {$\backslash$};}},postaction={decorate}}
+		]
+		\node (rp1) [int] {bit\\repack};
+		\node (enc) [right=of rp1,int] {encoder};
+		\node (rp2) [right=of enc,int] {bit\\repack};
+		\node (in) [left=of rp1] {};
+		\node (out) [right=of rp2] {};
+		\draw [->,bitw] (in) -- node[above=4pt] {32} (rp1);
+		\draw [->,bitw] (rp1) -- node[above=4pt] {324} (enc);
+		\draw [->,bitw] (enc) -- node[above=4pt] {648} (rp2);
+		\draw [->,bitw] (rp2) -- node[above=4pt] {32} (out);
+	
+	\end{tikzpicture}
 \end{frame}
 
 \begin{frame}
@@ -326,12 +343,20 @@
 
 \begin{frame}[fragile]
 	\frametitle{Decoding}
-	\begin{equation}
-		r_{mn} = \left( \prod_{n' \in M(m)\\n}\sign(q_{n'm}) \right) \min_{n' \in vn\{m\}\\n}(\left|q_{n'm}\right|)
-	\end{equation}
+	\begin{align*}
+		r_{mn} & = \left( \prod_{n' \in M(m) \setminus n}\sign(q_{n'm}) \right) \min_{n' \in M(m) \setminus n}(\left|q_{n'm}\right|) \\
+		q_{nm} & = y_n + \sum_{m' \in N(n) \setminus m}r_{m'n} \\
+		L_n & = y_n + \sum_{m \in N(n)}r_{m'n}
+	\end{align*}
 	\begin{itemize}
-		\item 
+		\item We have to implement these equations
+		\item Can exploit similarities
 	\end{itemize}
+\end{frame}
+
+\begin{frame}
+	\frametitle{Hardware Decoding}
+	draw my glorious two pass tree or the block diagram
 \end{frame}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%     Conclusion     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

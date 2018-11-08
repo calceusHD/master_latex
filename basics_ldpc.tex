@@ -280,19 +280,30 @@ Instead of working with hard decisions soft decision algorithms work with probab
 
 \paragraph{Sum Product}
 \begin{enumerate}
-	\item As information all the variable node send the only information they have to the check nodes. The nodes send the probability their bit is "1" to the check nodes. Thsese messages are $q_{nm}$. They are sent from the $n$th variable node to the $m$th check node.
+	\item As information all the variable node send the only information they have to the check nodes. The nodes send the probability their bit is "1" to the check nodes. These messages are $q_{nm}$. They are sent from the $n$th variable node to the $m$th check node.
 	\item The check nodes now calculate the message to each variable node using:
 		\begin{align*}
-			r_{mn}(0) & = \frac{1}{2} + \frac{1}{2} \prod_{n' \in M(m) \text{without} n}\left(1 - 2 q_{n'm}(1)\right) \\
+			r_{mn}(0) & = \frac{1}{2} + \frac{1}{2} \prod_{n' \in M(m) \setminus n}\left(1 - 2 q_{n'm}(1)\right) \\
 			r_{nm}(1) & = 1 - r{nm}(0)
 		\end{align*}
 		where $r_{mn}$ denotes the message from the $m$th check node to the $n$th variable node.
 	\item Now the variable nodes have all required information to compute their new value.
 		\begin{align*}
-			q_{nm} & = (1 - y_n) K_{nm} \prod_{m' \in N(n) \text{without} m}r_{m'n} \\
-			a & = n
+			q_{nm}(0) & = (1 - y_n) K_{nm} \prod_{m' \in N(n) \setminus m}r_{m'n}(0) \\
+			q_{nm}(1) & = y_n K_{nm} \prod_{m' \in N(n) \setminus m}r_{m'n}(1)
 		\end{align*}
-		where 
+		with $K_{nm}$ chosen so that $q_{nm}(0) + q_{nm}(1) = 1$. The variable nodes also update their estimates:
+		\begin{align*}
+			L_n(0) & = (1 - y_n) K_{nm} \prod_{m' \in N(n)}r_{m'n}(0) \\
+			L_n(1) & = y_n K_{nm} \prod_{m' \in N(n)}r_{m'n}(1)
+		\end{align*}
+		and
+		\begin{equation*}
+			x_n = \begin{cases}
+				1, & \text{for } L_n(1) > L_n(0) \\
+				0, & \text{else}
+			\end{cases}
+		\end{equation*}
 \end{enumerate}
 \todo{decode dat }
 

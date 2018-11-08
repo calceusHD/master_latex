@@ -16,13 +16,13 @@ The values from the channel are converted to LLRs $y_n$. These initial LLR value
 \item{Check Node Step}\\
 Each check node $m$ receives the messages from the variable nodes and calculates its response message.
 \begin{equation}
-    r_{mn} = \left( \prod_{n' \in M(m)\\n}\sign(q_{n'm}) \right) \min_{n' \in vn\{m\}\\n}(\left|q_{n'm}\right|)
+    r_{mn} = \left( \prod_{n' \in M(m)\setminus }\sign(q_{n'm}) \right) \min_{n' \in M(m) \setminus n}(\left|q_{n'm}\right|)
 \end{equation}
 
 \item{Variable node step}\\
 Each variable node $n$ receives the messages from the check nodes and calculates its response message.
 \begin{equation}
-    q_{nm} = y_n + \sum_{m' \in N(n)\\ m}r_{m'n}
+    q_{nm} = y_n + \sum_{m' \in N(n)\setminus m}r_{m'n}
 \end{equation}
 
 \item{Output Decision}\\
@@ -64,7 +64,7 @@ with
 In the variable node step I instead calculate the sum over all messages:
 
 \begin{equation}
-    S(n) = y_n + \sum_{m \in N(n)}r_{m'n}  \label{vn_sum}
+    S(n) = y_n + \sum_{m \in N(n)}r_{mn}  \label{vn_sum}
 \end{equation}
 With the help of this sum I can also calculate the messages from the variable nodes to the check nodes.
 \begin{equation}
@@ -81,7 +81,7 @@ The result step stays the same:
 \subsection{Normalized Min Sum}
 In the normalized min sum adaption proposed by Xiaofu Wu, Yue Song, Ming Jiang, and Chunming Zhao\cite{WuSo10} the check node step is replaced by the following equation:
 \begin{equation}
-    r_{mn} = \mu \left( \prod_{n' \in M(m)\\n}\sign(q_{n'm}) \right) \min_{n' \in vn\{m\}\\n}(\left|q_{n'm}\right|)
+    r_{mn} = \mu \left( \prod_{n' \in M(m) \setminus n}\sign(q_{n'm}) \right) \min_{n' \in M(m) \setminus n}(\left|q_{n'm}\right|)
 \end{equation}
 Where $\mu$ is called a normalization factor. For this factor the exist no analytical results so it has to be determined by simulations.
 
@@ -115,7 +115,17 @@ When directly mapping the variable and check nodes to the hardware I instantiate
 Each check node requires as many inputs as there are ones in each row of the parity check matrix. The same is true for each column of the parity check matrix and the variable nodes. The total amount of check nodes equals the number of rows in the parity check matrix. Also the number of variable nodes is equal to the number of columns in the parity check matrix.
 
 \begin{figure}
-    make image of the internal structure of a check node
+    \begin{tikzpicture}
+        \node [rectangle, draw, minimum width=3cm, minimum height=3cm] {};
+        \node (plus) [rectangle, draw, minimum height=2cm] {+};
+        \node (llr) [above left=0cm and 2cm of plus] {$y_n$};
+        \node (vals) [left=0cm and 2cm of plus] {$r_{mn}$};
+        \node [below=0.2cm of vals] {\vdots};
+        \node (res) [right=2cm of plus] {$S_n$};
+        \draw [->] (plus) -- (res);
+        \draw [->] (vals) -- (plus);
+        \draw [->] (llr) -| ($(llr)!0.6!(plus)$) |- ([yshift=20mm]plus);
+    \end{tikzpicture}
     \centering
     \caption{An Example Check Node}
 \end{figure}
@@ -145,7 +155,7 @@ To reduce the hardware requirements I use the submatrix structure of the overall
     \end{matrix}\right] \label{ex_qc_mat}
 \end{equation}
 
-The variable node values have to be rearranged depending on the current submatrix. As all the submatrices are shifted identity matrices it is possible to use a barrel shifter to shift all variable node values so that only interconnects for a identity matrix have to be provided. \cref {rot_iden_same} is an example how the data is first rotated and the passed through an identity matrix to get the same result als with a rotated matrix. I use this for the implementation to only have a single interconnect network representing an identity matrix.
+The variable node values have to be rearranged depending on the current submatrix. As all the submatrices are shifted identity matrices it is possible to use a barrel shifter to shift all variable node values so that only interconnects for a identity matrix have to be provided. \cref{rot_iden_same} is an example how the data is first rotated and the passed through an identity matrix to get the same result als with a rotated matrix. I use this for the implementation to only have a single interconnect network representing an identity matrix.
 
 \begin{figure}
     so this should be an image that has a rotated matrix to connect some row of values to the output column and then how rotating and connecting with identity gets the same result.

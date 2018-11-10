@@ -106,6 +106,18 @@ The adaptive algorithm changes the normalization factor so it is dependent on so
 
 \subsection{Adaptive Offset Min Sum}
 
+\section{LLR Conversion} \label{llr_approach}
+To process the data coming from the channel it is converted into LLRs. I used an AWGN channel so the noise distribution is gaussian. The LLR is defined as:
+\begin{equation}
+    LLR_i = \frac{P(x_i = 1 | y_i)}{P(x_i = -1 | y_i)}
+\end{equation}
+Where the probabilities are gaussian distributions with variance $\sigma$ so the LLR becomes:
+\begin{align}
+    LLR_i & = \log{\frac{\frac{1}{\sqrt{2 \pi \sigma^2}}e^{-\frac{(y_i - 1)^2}{2 \sigma^2}}}{\frac{1}{\sqrt{2 \pi \sigma^2}}e^{-\frac{(y_i + 1)^2}{2 \sigma^2}}}} \\
+    LLR_i & = -\frac{(y_i - 1)^2}{2 \sigma^2} + \frac{(y_i + 1)^2}{2 \sigma^2} \\
+    LLR_i & = 2\frac{y_i}{\sigma^2}
+\end{align}
+
 \section{Hardware Adaptation}
 To build hardware for an LDPC code first I have to decide which approach to take. Either a simpler approach that directly maps all check and variable nodes to hardware or only build part of the nodes in hardware and switch the data to these nodes. First I will show the simpler approach and explain its weakness.
 

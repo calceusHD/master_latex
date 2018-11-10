@@ -35,8 +35,8 @@
 ]{todonotes}
 \usepackage[final]{pdfpages}
 \usepackage{etoolbox}
-\usepackage[backend=bibtex,style=alphabetic]{biblatex}
-
+\usepackage[backend=bibtex]{biblatex}
+\usepackage[autostyle=true]{csquotes}
 
 %broken biblatex http://tex.stackexchange.com/questions/311426/bibliography-error-use-of-blxbblverbaddi-doesnt-match-its-definition-ve
 \makeatletter
@@ -44,7 +44,7 @@
 \makeatother
 
 \usepackage{multirow}
-\captionsetup[figure]{name=}
+%\captionsetup[figure]{name=} % dunno what this is, but it generates a warning so i comment it out
 
 % \setbeamercolor{title}{fg=red!80!black}
 
@@ -52,13 +52,14 @@
 \usepackage[english]{babel}
 \usepackage[utf8]{inputenc}
 \usetikzlibrary{shapes, arrows.meta, positioning, decorations.pathmorphing, math, calc, fit, chains, matrix, decorations.pathreplacing, trees, backgrounds, tikzmark, decorations.markings}
-%\usetikzlibrary{, , , , , , , ., , , }
+
 \usepackage{xcolor}
 % \usepackage[table]{xcolor}
 \PassOptionsToPackage{table}{xcolor}
 % \usepackage{tabularx}
 % \usepackage{mathptmx,amsmath}
 \usepackage{graphicx}
+\addbibresource{../database.bib}
 \linespread{1.3} % increase baselineskip (spacing between lines)
 \title{Design and Implementation of an LDPC-based FEC encoder/decoder suitable for Storage devices}
 % \subtitle[]{}
@@ -76,7 +77,7 @@
 	mark=diamond,color=black,thick\\%
 }
 
-\bibliography{../database.bib}
+
 
 \AtBeginSection[]
 {
@@ -183,7 +184,7 @@
 		\item Is usually done with generator matrix
 		\item The generator matrix is dense due to the inversion
 		\item With long codes the dense matrix multiplication is large
-		\item Use transforms on the PCM to convert it into a more desireable form
+		\item Use transforms on the PCM to convert it into a more desireable form\cite{QiGo07}
 	\end{itemize}
 	
 \end{frame}
@@ -250,6 +251,8 @@
 	\end{itemize}
 \end{frame}
 
+
+\section{Encoding}
 \begin{frame}
 	\frametitle{Encoding}
 	\begin{itemize}
@@ -295,11 +298,13 @@
 	\end{tikzpicture}
 \end{frame}
 
+
+\section{Decoding}
 \begin{frame}
 	\frametitle{Decoding}
 	\begin{itemize}
 		\item I implemented a message passing decoder
-		\item Messages are passed along the edges on the tanner graphicspath
+		\item Messages are passed along the edges on the tanner graph\cite{Ta81}
 		\item Computations are done on the nodes
 	\end{itemize}
 	\begin{tikzpicture}[
@@ -356,17 +361,130 @@
 
 \begin{frame}
 	\frametitle{Hardware Decoding}
-	draw my glorious two pass tree or the block diagram
+	\begin{itemize}
+		\item two pass algorithm
+		\item intermediate values stored im memory
+	\end{itemize}
+	\begin{tikzpicture}[
+		elem/.style={draw,rectangle,node distance=0.5cm,align=center,minimum width=.5cm, minimum height=.5cm}
+	]
+		\node (mime) [elem] {Minimum Memory};
+		\node (sime) [elem,below=of mime] {Sigm Memory};
+		\node (cngl) [elem,left=of sime] {Global\\Check Node};
+		\node (rot1) [elem,below=of cngl] {Barrel Shift};
+		\node (vnlo) [elem,below=of rot1] {Local\\Variable Node};
+		\node (sume) [elem,right=of vnlo] {Sum Memory};
+		\node (cnlo) [elem,right=of sime] {Local\\Check Node};
+		\node (rot2) [elem,below=of cnlo] {Barrel Shift};
+		\node (vngl) [elem,below=of rot2] {Global\\Variable Node};
+		\node (llri) [elem,right=of vngl] {LLR Input};
+	
+		\draw [->] (mime) -| (cnlo);
+		\draw [->] (sime) -- (cnlo);
+		\draw [->] (cnlo) -- (rot2);
+		\draw [->] (rot2) -- (vngl);
+		\draw [->] (llri) -- (vngl);
+		\draw [->] (vngl) -- (sume);
+		\draw [->] (sume) -- (vnlo);
+		\draw [->] (vnlo) -- (rot1);
+		\draw [->] (rot1) -- (cngl);
+		\draw [->] (cngl) |- (mime);
+		\draw [->] (cngl) -- (sime);
+	\end{tikzpicture}
+	\centering
+\end{frame}
+\begin{frame}
+	\frametitle{Hardware Decoding}
+	\begin{tikzpicture}
+		[
+	elem/.style={draw,rectangle,node distance=0.5cm,align=center,minimum width=.5cm, minimum height=.5cm}
+	]
+		\node (cnlo) [elem] {Local Check Node};
+		\node (rol1) [elem,below=of cnlo] {Barrel Shift};
+		\visible<1,3> {
+			\node (vngl) [elem,below left=0.5cm and -0.4cm of rol1] {Global Variable Node};
+			\node (sumr) [elem,below=of vngl] {Sum Storage};
+		}
+		\visible<2-3> {
+			\node (vnlo) [elem,below right=0.5cm and -0.4cm of rol1] {Local Variable Node};
+			\node (rol2) [elem,below=of vnlo] {Barrel Shift};
+			\node (cngl) [elem,below=of rol2] {Global Check Node};
+
+			\node (sums) [elem,above right=0.5cm and -0.9cm of vnlo] {Sum Storage};
+			\node (minr) [elem,below left=0.5 and -0.7cm of cngl] {Minimum Storage};
+			\node (sigr) [elem,below right=0.5cm and -0.7cm of cngl] {Sign Storage};
+		}
+
+		\node (mins) [elem,above left=0.5cm and -0.5cm of cnlo] {Minimum Storage};
+		\node (sigs) [elem,above right=0.5cm and -0.5cm of cnlo] {Sign Storage};
+		
+		\draw [->] (mins) -- (cnlo);
+		\draw [->] (sigs) -- (cnlo);
+		\draw [->] (cnlo) -- (rol1);
+		\visible<1,3> {
+			\draw [->] (rol1) -- (vngl);
+			\draw [->] (vngl) -- (sumr);
+		}
+	
+		\visible<2-3> {
+			\draw [->] (sums) -- (vnlo);
+			\draw [->] (rol1) -- (vnlo);
+			\draw [->] (vnlo) -- (rol2);
+			\draw [->] (rol2) -- (cngl);
+			\draw [->] (cngl) -- (minr);
+			\draw [->] (cngl) -- (sigr);
+		}
+	\end{tikzpicture}
+	\centering
 \end{frame}
 
+\todo{i probably gotta do more decoding specifics about how i go through the rows and cols}
+\section{Performance}
+\begin{frame}
+	\frametitle{Performance Testing}
+	\begin{itemize}
+		\item Used a ZedBoard
+		\item Testing requires an encoder, channel, decoder setup
+		\item AWGN channel
+		\item Whole performance test is implemented on Hardware
+		\item ARM cpu calculates test parameters and reads the error counts
+	\end{itemize}
+	\begin{tikzpicture}
+		[
+	elem/.style={draw,rectangle,node distance=0.5cm,align=center,minimum width=.5cm, minimum height=.5cm},
+	branch/.style={fill,shape=circle,minimum size=3pt,inner sep=0pt}
+	]
+		\node (rdi) [elem] {Random\\Codewords};
+		\node (enc) [elem,right=of rdi] {Encoder};
+		\node (add) [elem,right=of enc] {+};
+		\node (dec) [elem,right=of add] {Decoder};
+		\node (com) [elem,right=of dec] {Compare};
+		\node (ran) [elem,below=of add] {Gaussian Noise};
+		\node (fif) [elem,above=of dec] {FIFO};
+		\node (arm) [elem,right=of com] {ARM\\CPU};
+	
+		\draw [->] (rdi) -- (enc);
+		\draw [->] (enc) -- node[pos=0.5,branch] (test) {} (add);
+		\draw [->] (add) -- (dec);
+		\draw [->] (dec) -- (com);
+		\draw [->] (ran) -- (add);
+		\draw [->] (test) |- (fif);
+		\draw [->] (fif) -| (com);
+		\draw [->] (com) -- (arm);
+	\end{tikzpicture}
+\end{frame}
+
+\section{Results}
+\begin{frame}
+	\frametitle{Simulation Results}
+	
+\end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%     Conclusion     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Conclusion}
 \begin{frame}
 	\frametitle{Conclusion}
 	\begin{itemize}
-		\item LDPC codes are usable with flash memory
-		\item A latency vs. error correction capability trade off enables more control
-		\item Overclocking directly improves user experience
+		\item Do a conclusion and maybe a part on future works?
 	\end{itemize}
 \end{frame}
 
@@ -380,13 +498,6 @@
 \begin{frame}[allowframebreaks]
 	\frametitle{References}
 	\linespread{1}
-	\mode<handout>{
-		\cite{CaiHaratschMutluMai2012}
-		\cite{regulapati2015error}
-		\cite{ZhaoVenkataramanZhang2014}
-		\cite{ZhaoLiMaMicheloniZhang2014}
-		\cite{zhao13}
-	}
 	\printbibliography
 \end{frame}
 

@@ -101,7 +101,7 @@
 
 \setbeamercovered{invisible}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%     Title Page     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\pgfplotsset{compat=1.16}
+\pgfplotsset{compat=1.15}
 \begin{document}
 	
 \begin{frame}[plain]
@@ -438,7 +438,63 @@
 	\centering
 \end{frame}
 
-\todo{i probably gotta do more decoding specifics about how i go through the rows and cols}
+\begin{frame}[fragile]
+	\frametitle{Hardware Decoding}
+	\begin{tikzpicture}[
+		style1/.style={
+				matrix of math nodes,
+				every node/.append style={text width=#1,align=center,minimum height=3ex},
+				nodes in empty cells,
+			},
+			scale=1,
+			every node/.style={scale=1}
+		]
+		\matrix[style1=0.3cm] (1mat) {
+			0 & 0 & 0 & 1 & 0 & 0 & 0 & 0 & 1 & 0 & 0 & 0 \\
+			0 & 0 & 0 & 0 & 1 & 0 & 1 & 0 & 0 & 0 & 0 & 0 \\
+			0 & 0 & 0 & 0 & 0 & 1 & 0 & 1 & 0 & 0 & 0 & 0 \\
+			1 & 0 & 0 & 0 & 1 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+			0 & 1 & 0 & 0 & 0 & 1 & 0 & 0 & 0 & 0 & 0 & 0 \\
+			0 & 0 & 1 & 1 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+			0 & 0 & 0 & 0 & 1 & 0 & 1 & 0 & 0 & 0 & 0 & 1 \\
+			0 & 0 & 0 & 0 & 0 & 1 & 0 & 1 & 0 & 1 & 0 & 0 \\
+			0 & 0 & 0 & 1 & 0 & 0 & 0 & 0 & 1 & 0 & 1 & 0 \\
+		};
+		\matrix[style1=0.3cm,below=0.4cm of 1mat] (2mat) {
+			4 & 1 & 6 & 3 & 8 & 7 & 5 & 9 & 2 & 4 & 2 & 8 \\
+		};
+	
+		
+	
+		\draw (1mat-1-1.north west) rectangle (1mat-3-3.south east);
+		\draw (2mat-1-1.north west) rectangle (2mat-1-3.south east);
+		\matrix[style1=0.3cm,right=0.4cm of 1mat] (3mat) {
+			0 \\ 0 \\ 0 \\ 0 \\ 0 \\ 0 \\ 0 \\ 0 \\ 0 \\
+		};
+	
+		\draw (1mat-1-4.north west) rectangle (1mat-3-6.south east);
+		\draw (2mat-1-4.north west) rectangle (2mat-1-6.south east);
+		\matrix[style1=0.3cm,right=0.4cm of 1mat] (3mat) {
+			3 \\ 8 \\ 7 \\ 0 \\ 0 \\ 0 \\ 0 \\ 0 \\ 0 \\
+		};
+	
+		\draw (1mat-1-7.north west) rectangle (1mat-3-9.south east);
+		\draw (2mat-1-7.north west) rectangle (2mat-1-9.south east);
+		\matrix[style1=0.3cm,right=0.4cm of 1mat] (3mat) {
+			2 \\ 5 \\ 7 \\ 0 \\ 0 \\ 0 \\ 0 \\ 0 \\ 0 \\
+		};
+	
+		\draw (1mat-1-10.north west) rectangle (1mat-3-12.south east);
+		\draw (2mat-1-10.north west) rectangle (2mat-1-12.south east);
+		\matrix[style1=0.3cm,right=0.4cm of 1mat] (3mat) {
+			2 \\ 5 \\ 7 \\ 0 \\ 0 \\ 0 \\ 0 \\ 0 \\ 0 \\
+		};
+	
+		\node [above=0.4cm of 3mat] {Running minimum};
+	\end{tikzpicture}
+\end{frame}
+
+
 \section{Performance}
 \begin{frame}
 	\frametitle{Performance Testing}

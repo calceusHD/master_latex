@@ -1,14 +1,26 @@
 \documentclass[border=1cm]{standalone}
 
-\usepackage{tikz}
+%\usepackage{tikz}
 \usepackage{amsmath}
 \usepackage{pgfplots}
 \usepackage{gensymb}
+\usepackage{pgfplots}
+\usepackage{pgfplotstable}
 \usepackage{bm}
 \usepackage{amssymb}
 \usetikzlibrary{shapes, arrows.meta, positioning, decorations.pathmorphing, math, calc, fit, chains, matrix, decorations.pathreplacing, decorations.markings}
 
 \pgfplotsset{compat=1.15}
 \begin{document}
-
+\begin{tikzpicture}
+    \node [rectangle, draw, minimum width=3cm, minimum height=3cm] {};
+    \node (plus) [rectangle, draw, minimum height=2cm] {+};
+    \node (llr) [above left=0cm and 2cm of plus] {$y_n$};
+    \node (vals) [left=0cm and 2cm of plus] {$r_{mn}$};
+    \node [below=0.2cm of vals] {\vdots};
+    \node (res) [right=2cm of plus] {$L_n$};
+    \draw [->] (plus) -- (res);
+    \draw [->] (vals) -- (plus);
+    \draw [->] (llr) -| ($(llr)!0.6!(plus)$) |- ([yshift=20mm]plus);
+\end{tikzpicture}
 \end{document}

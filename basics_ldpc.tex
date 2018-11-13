@@ -278,13 +278,14 @@ This algorithm works on binary input data and all the messages are also binary. 
 \subsubsection{Soft Descision Decoding}
 Instead of working with hard decisions soft decision algorithms work with probabilities. Herein lies the advantage that there is more information given about each bit. So if a probability is close to $0.5$ the an error could be more likely. Algorithms like these are also known as belief propagation algorithms.
 
-\paragraph{Sum Product}
+\paragraph{Belief Propagation}
+The belief propagation decoding is a soft decision decoding algorithm which offers great performance\cite{KoYu01}. It does not lend itself to implementation on hardware because of the multiplications. This complexity is compounded with the requirement for SNR estimation.
 \begin{enumerate}
 	\item As information all the variable node send the only information they have to the check nodes. The nodes send the probability their bit is "1" to the check nodes. These messages are $q_{nm}$. They are sent from the $n$th variable node to the $m$th check node.
 	\item The check nodes now calculate the message to each variable node using:
 		\begin{align*}
 			r_{mn}(0) & = \frac{1}{2} + \frac{1}{2} \prod_{n' \in M(m) \setminus n}\left(1 - 2 q_{n'm}(1)\right) \\
-			r_{nm}(1) & = 1 - r{nm}(0)
+			r_{nm}(1) & = 1 - r_{nm}(0)
 		\end{align*}
 		where $r_{mn}$ denotes the message from the $m$th check node to the $n$th variable node.
 	\item Now the variable nodes have all required information to compute their new value.
@@ -305,5 +306,25 @@ Instead of working with hard decisions soft decision algorithms work with probab
 			\end{cases}
 		\end{equation*}
 \end{enumerate}
-\todo{decode dat }
+
+\paragraph{Sum Product}
+
+To relieve the required multiplications decoding is done using log likelihood ratios. When in the log domain the product is replaced by a sum. The first product of the belief propagation algorithm is replaced by:
+\begin{equation}
+	r_{mn} = \left( \prod_{n' \in M(m)\setminus n}\sign(q_{n'm}) \right) \tanh^{-1}\left(\prod_{n' \in M(m) \setminus n}\tanh\left(\frac{\left|q_{n'm}\right|}{2}\right)\right)
+\end{equation}
+And the other ones are simply sums:
+\begin{align}
+	q_{nm} & = y_n + \sum_{m' \in N(n) \setminus m} r_{nm} \\
+	L_n & = y_n + \sum_{m' \in N(n)} r_{nm}
+\end{align}
+It seems like trading a product for an even more complex product with trigonometric functions is a bad idea performance wise. But Fossorier, Mihaljevic, and Imai\cite{FoMi99} show an approximation that results in the min sum algorithm.
+
+\paragraph{Min Sum}
+
+For the min sum algorithm a simplification for the tanh equation is used. This reduces performance compared to the sum product algorithm.
+\begin{equation}
+	r_{mn} = \left( \prod_{n' \in M(m)\setminus n}\sign(q_{n'm}) \right) \min_{n' \in M(m) \setminus n}(\left|q_{n'm}\right|)
+\end{equation}
+Some of the performance loss can be regained by changing the check node Calculations. This leads to the normalized and offset min sum algorithms.
 

@@ -446,8 +446,8 @@
 				every node/.append style={text width=#1,align=center,minimum height=3ex},
 				nodes in empty cells,
 			},
-			scale=1,
-			every node/.style={scale=1}
+			scale=1.0,
+			every node/.style={scale=1.0}
 		]
 		\matrix[style1=0.3cm] (1mat) {
 			0 & 0 & 0 & 1 & 0 & 0 & 0 & 0 & 1 & 0 & 0 & 0 \\
@@ -460,38 +460,45 @@
 			0 & 0 & 0 & 0 & 0 & 1 & 0 & 1 & 0 & 1 & 0 & 0 \\
 			0 & 0 & 0 & 1 & 0 & 0 & 0 & 0 & 1 & 0 & 1 & 0 \\
 		};
-		\matrix[style1=0.3cm,below=0.4cm of 1mat] (2mat) {
+		\matrix[style1=0.3cm,below=0.2cm of 1mat] (2mat) {
 			4 & 1 & 6 & 3 & 8 & 7 & 5 & 9 & 2 & 4 & 2 & 8 \\
 		};
 	
 		
+		\visible<1> {
+			\draw (1mat-1-1.north west) rectangle (1mat-3-3.south east);
+			\draw (2mat-1-1.north west) rectangle (2mat-1-3.south east);
+			\matrix[style1=0.3cm,right=0.2cm of 1mat] (3mat) {
+				\infty \\ \infty \\ \infty \\ \infty \\ \infty \\ \infty \\ \infty \\ \infty \\ \infty \\
+			};
+		}
+		\visible<2> {
+			\draw (1mat-1-4.north west) rectangle (1mat-3-6.south east);
+			\draw (2mat-1-4.north west) rectangle (2mat-1-6.south east);
+			\matrix[style1=0.3cm,right=0.2cm of 1mat] (3mat) {
+				3 \\ 8 \\ 7 \\ \infty \\ \infty \\ \infty \\ \infty \\ \infty \\ \infty \\
+			};
+		}
+		
+		\visible<3> {
+			\draw (1mat-1-7.north west) rectangle (1mat-3-9.south east);
+			\draw (2mat-1-7.north west) rectangle (2mat-1-9.south east);
+			\matrix[style1=0.3cm,right=0.2cm of 1mat] (3mat) {
+				2 \\ 5 \\ 7 \\ \infty \\ \infty \\ \infty \\ \infty \\ \infty \\ \infty \\
+			};
+		}
+
+		\visible<4> {
+			\draw (1mat-1-10.north west) rectangle (1mat-3-12.south east);
+			\draw (2mat-1-10.north west) rectangle (2mat-1-12.south east);
+			\matrix[style1=0.3cm,right=0.2cm of 1mat] (3mat) {
+				2 \\ 5 \\ 7 \\ \infty \\ \infty \\ \infty \\ \infty \\ \infty \\ \infty \\
+			};
+		}
 	
-		\draw (1mat-1-1.north west) rectangle (1mat-3-3.south east);
-		\draw (2mat-1-1.north west) rectangle (2mat-1-3.south east);
-		\matrix[style1=0.3cm,right=0.4cm of 1mat] (3mat) {
-			0 \\ 0 \\ 0 \\ 0 \\ 0 \\ 0 \\ 0 \\ 0 \\ 0 \\
-		};
-	
-		\draw (1mat-1-4.north west) rectangle (1mat-3-6.south east);
-		\draw (2mat-1-4.north west) rectangle (2mat-1-6.south east);
-		\matrix[style1=0.3cm,right=0.4cm of 1mat] (3mat) {
-			3 \\ 8 \\ 7 \\ 0 \\ 0 \\ 0 \\ 0 \\ 0 \\ 0 \\
-		};
-	
-		\draw (1mat-1-7.north west) rectangle (1mat-3-9.south east);
-		\draw (2mat-1-7.north west) rectangle (2mat-1-9.south east);
-		\matrix[style1=0.3cm,right=0.4cm of 1mat] (3mat) {
-			2 \\ 5 \\ 7 \\ 0 \\ 0 \\ 0 \\ 0 \\ 0 \\ 0 \\
-		};
-	
-		\draw (1mat-1-10.north west) rectangle (1mat-3-12.south east);
-		\draw (2mat-1-10.north west) rectangle (2mat-1-12.south east);
-		\matrix[style1=0.3cm,right=0.4cm of 1mat] (3mat) {
-			2 \\ 5 \\ 7 \\ 0 \\ 0 \\ 0 \\ 0 \\ 0 \\ 0 \\
-		};
-	
-		\node [above=0.4cm of 3mat] {Running minimum};
+		\node [above=0.2cm of 3mat] {Running minimum};
 	\end{tikzpicture}
+	\centering
 \end{frame}
 
 
@@ -531,16 +538,124 @@
 \end{frame}
 
 \section{Results}
+\newcommand{\addgraph}[2]{\addplot table [col sep=tab,x index={0}, y index={#2}] {#1};
+	\pgfplotstablegetcolumnnamebyindex{#2}\of{#1}\to{\colname}
+	\addlegendentryexpanded{\colname}}
+\pgfplotstableread[col sep=tab]{../data/sw_err_simple.dat}\basesim
 \begin{frame}
 	\frametitle{Simulation Results}
-	
+	802.11n LDPC code with rate 0.5
+	\begin{tikzpicture}
+		\begin{semilogyaxis}[width=11cm,height=\axisdefaultheight-10mm,xlabel={$E_b / N_0$} in dB, ylabel={Error Rate}, legend pos=south west]
+			
+			\only<1> {
+				\addgraph{\basesim}{1}
+				\addgraph{\basesim}{3}
+			}
+
+			\addgraph{\basesim}{2}
+			\addgraph{\basesim}{4}
+			\only<2> {
+				\addgraph{\basesim}{6}
+				\addgraph{\basesim}{7}
+			}
+
+		\end{semilogyaxis}
+	\end{tikzpicture}
+\end{frame}
+
+
+\newcommand{\cleanaddgraph}[2]{\addplot table [mark=none,col sep=tab,x index={0}, y index={#2}] {#1};
+	\pgfplotstablegetcolumnnamebyindex{#2}\of{#1}\to{\colname}
+	\addlegendentryexpanded{\colname}
+}
+
+\begin{frame}
+	\frametitle{Hardware Results}
+	\begin{itemize}
+		\item Decoder expects LLR
+		\item Convert channel output to LLR
+	\end{itemize}
+	\begin{tikzpicture}[
+		elem/.style={draw,rectangle,node distance=1cm,align=center,minimum width=.5cm, minimum height=.5cm},
+		circ/.style={draw,circle,node distance=1cm,align=center,minimum width=.5cm, minimum height=.5cm},
+		branch/.style={fill,shape=circle,minimum size=3pt,inner sep=0pt}]
+		\node (gvg) [elem] {GVG};
+		\node (mul) [circ, right=of gvg] {$\times$};
+		\node (sig) [right=of mul] {$\sigma$};
+		\node (plu) [elem,above=of mul] {+};
+		\node (mus) [circ,left=of plu] {$\times$};
+		\node (fac) [above=of mus] {Scale};
+		\node (cha) [left=of mus] {Encoded};
+		\node (llr) [circ,right=of plu] {$\times$};
+		\node (llv) [above=of llr] {$\frac{2}{\sigma^2}$};
+		\node (dec) [right=of llr] {Decoder};
+		\draw [->] (gvg) -- (mul);
+		\draw [->] (sig) -- (mul);
+		\draw [->] (mul) -- (plu);
+		\draw [->] (plu) -- (llr);
+		\draw [->] (llv) -- (llr);
+		\draw [->] (llr) -- (dec);
+		\draw [->] (cha) -- (mus);
+		\draw [->] (fac) -- (mus);
+		\draw [->] (mus) -- (plu); 
+	\end{tikzpicture}
+	\centering
+\end{frame}
+
+
+\begin{frame}
+	\frametitle{Hardware Results}
+	Optimize the input scaling
+	\begin{tikzpicture}
+		\begin{semilogyaxis}[width=11cm,height=\axisdefaultheight-10mm,xlabel={$E_b / N_0$} in dB, ylabel={Error Rate}, legend pos=south west]
+			\pgfplotstableread[col sep=tab]{../data/hw_opt_bit_val_coarse.dat}\hwoptbitbal
+			\foreach \x in {1,...,7} {
+				\cleanaddgraph{\hwoptbitbal}{\x};
+			}
+		\end{semilogyaxis}
+	\end{tikzpicture}
+\end{frame}
+
+\begin{frame}
+	\frametitle{Hardware Results}
+	I chose a scaling of 0.75
+	\begin{tikzpicture}
+		\begin{semilogyaxis}[width=11cm,height=\axisdefaultheight-10mm,xlabel={$E_b / N_0$} in dB, ylabel={Error Rate}, legend pos=south west]
+			\pgfplotstableread[col sep=tab]{../data/hw_opt_bit_val_fine.dat}\hwoptbitbal
+			\foreach \x in {2,4,...,17} {
+				\cleanaddgraph{\hwoptbitbal}{\x};
+			}
+		\end{semilogyaxis}
+	\end{tikzpicture}
+\end{frame}
+
+\begin{frame}
+	\frametitle{Hardware Results}
+	\framesubtitle{Normalized Min Sum}
+	\begin{tikzpicture}
+		\begin{semilogyaxis}[width=11cm,height=\axisdefaultheight,xlabel={$E_b / N_0$} in dB, ylabel={Error Rate}, legend pos=south west]
+			\pgfplotstableread[col sep=tab]{../data/hw_opt_norm.dat}\hwoptnorm
+			\addgraph{\basesim}{7}
+			\foreach \x in {5,...,8} {
+				\cleanaddgraph{\hwoptnorm}{\x};
+			}
+		\end{semilogyaxis}
+	\end{tikzpicture}
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%     Conclusion     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Conclusion}
+\section{Conclusion and Outlook}
 \begin{frame}
-	\frametitle{Conclusion}
+	\frametitle{Conclusion and Outlook}
+	{\Large Conclusion}
 	\begin{itemize}
-		\item Do a conclusion and maybe a part on future works?
+		\item LDPC codes can be implemented on hardware
+		\item 
+	\end{itemize}
+	{\Large Outlook}
+	\begin{itemize}
+		\item Look at power consumption
+		\item Optimize area utilization
 	\end{itemize}
 \end{frame}
 

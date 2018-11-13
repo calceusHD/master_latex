@@ -19,8 +19,32 @@ I wrote the decoder to represent the way I planned the FPGA implementation. So t
 I chose to reduce the hardware complexity by splitting both the check node and the variable node step each into a global calculation and a local one. The global check node calculates \cref{cn_min,cn_min2,cn_min_id,cn_sign} and the local computes \cref{cn_loc}. The same goes for the variable node where the sum over all inputs as in \cref{vn_sum} and then for the local part the input is subtracted \cref{vn_loc}.
 
 \begin{figure}
-    \includegraphics[width=5cm]{dataflow_circle.png}
-    put the ugly paper drawing that i have all the time lying around maybe put the sizes of all dem signals here?
+    \begin{tikzpicture}[
+		elem/.style={draw,rectangle,node distance=0.5cm,align=center,minimum width=.5cm, minimum height=.5cm}
+	]
+		\node (mime) [elem] {Minimum Memory};
+		\node (sime) [elem,below=of mime] {Sigm Memory};
+		\node (cngl) [elem,left=of sime] {Global\\Check Node};
+		\node (rot1) [elem,below=of cngl] {Barrel Shift};
+		\node (vnlo) [elem,below=of rot1] {Local\\Variable Node};
+		\node (sume) [elem,right=of vnlo] {Sum Memory};
+		\node (cnlo) [elem,right=of sime] {Local\\Check Node};
+		\node (rot2) [elem,below=of cnlo] {Barrel Shift};
+		\node (vngl) [elem,below=of rot2] {Global\\Variable Node};
+		\node (llri) [elem,right=of vngl] {LLR Input};
+	
+		\draw [->] (mime) -| (cnlo);
+		\draw [->] (sime) -- (cnlo);
+		\draw [->] (cnlo) -- (rot2);
+		\draw [->] (rot2) -- (vngl);
+		\draw [->] (llri) -- (vngl);
+		\draw [->] (vngl) -- (sume);
+		\draw [->] (sume) -- (vnlo);
+		\draw [->] (vnlo) -- (rot1);
+		\draw [->] (rot1) -- (cngl);
+		\draw [->] (cngl) |- (mime);
+		\draw [->] (cngl) -- (sime);
+	\end{tikzpicture}
     \centering
     \caption{Message and Memory architecture}
 \end{figure}
@@ -66,7 +90,7 @@ The basic min sum algorithm serves as a baseline for the upcoming improvements. 
         \end{semilogyaxis}
     \end{tikzpicture}
     \centering
-
+    %\todo{nononono}
     \caption{Bit Error Rates of the Normalized Min Sum Algorithm for Different Normalization Factors}
     \label{min_sum_base}
 \end{figure}
@@ -97,8 +121,34 @@ I will start with the global variable node pass as this has fewer steps and some
 The global check nodes pass starts the same as the global variable node one until the barrel roll. After rolling the LLRs are passed into the local variable node entity. The local variable node subtracts the incoming LLR from the sums the variable nodes calculated and outputs it. Now the LLRs are passed through a reverse roll to align them for the global check node. The global check node then does an accumulation. This consists of taking the minimum, second minimum, and the signs for the minimum. Also the signs of all incoming LLR values are output.
 
 \begin{figure}
-    \includegraphics[width=5cm]{dataflow_tree.png}
-    maybe add the min mangle at the end
+    \begin{tikzpicture}
+		[
+	elem/.style={draw,rectangle,node distance=0.5cm,align=center,minimum width=.5cm, minimum height=.5cm}
+	]
+		\node (cnlo) [elem] {Local Check Node};
+		\node (rol1) [elem,below=of cnlo] {Barrel Shift};
+        \node (vngl) [elem,below left=0.5cm and -0.4cm of rol1] {Global Variable Node};
+        \node (sumr) [elem,below=of vngl] {Sum Storage};
+        \node (vnlo) [elem,below right=0.5cm and -0.4cm of rol1] {Local Variable Node};
+        \node (rol2) [elem,below=of vnlo] {Barrel Shift};
+        \node (cngl) [elem,below=of rol2] {Global Check Node};
+        \node (sums) [elem,above right=0.5cm and -0.9cm of vnlo] {Sum Storage};
+        \node (minr) [elem,below left=0.5 and -0.7cm of cngl] {Minimum Storage};
+        \node (sigr) [elem,below right=0.5cm and -0.7cm of cngl] {Sign Storage};
+		\node (mins) [elem,above left=0.5cm and -0.5cm of cnlo] {Minimum Storage};
+		\node (sigs) [elem,above right=0.5cm and -0.5cm of cnlo] {Sign Storage};
+		\draw [->] (mins) -- (cnlo);
+		\draw [->] (sigs) -- (cnlo);
+		\draw [->] (cnlo) -- (rol1);
+        \draw [->] (rol1) -- (vngl);
+        \draw [->] (vngl) -- (sumr);
+        \draw [->] (sums) -- (vnlo);
+        \draw [->] (rol1) -- (vnlo);
+        \draw [->] (vnlo) -- (rol2);
+        \draw [->] (rol2) -- (cngl);
+        \draw [->] (cngl) -- (minr);
+        \draw [->] (cngl) -- (sigr);
+	\end{tikzpicture}
     \centering
     \caption{Dataflow Diagram of the Decoder}
     \label{datafl_tree}
@@ -217,12 +267,6 @@ I used AXI-Stream interfaces to input the LLR values into the decoder and to out
 \subsection{Pipelining}
 If implemented without any pipeline steps the maximum clock for the 648 bits message length, rate $0.5$, and 7 bit LLR is ~27Mhz\todo{check real val}. By adding registers between some steps I reduce the critical path. By adding two stages I increase the maximum clock rate to ~70Mhz\todo{test}. The pipeline stages are added between the local check node and the first barrel roll and after the second barrel roll. These position were determined by check the critical path timing in Vivado and adding registers to achieve a maximum critical path length of 10ns as to get a 100Mhz clock. \todo{i prolly need one after the global check node to get the memory timing better}
 
-\subsection{Possible Improvements}
-More pipelining
-In and output double buffering
-More pipeline stages
-u no dependency optimization
-
 \section{Data Source}
 For evaluating the whole pipeline a source of data to be encoded is required. I used a uniform random number generator. The numbers were generated using a Tausworthe generator\cite{Ec96}. I implemented it in a straightforward manner in VHDL. There were no difficulties as it consists of static shifts and bit boolean operators.
 
@@ -241,3 +285,9 @@ The results of each decoding are compared to the input to the channel. As the ou
 The whole system is controlled by the ARM core of the SoC. The parameters of the test system are set first by the ARM and then the encoder decoder core is set to run. While it is running the bit error counts of each transmission are read out and summed. As each frame is handled separately by the result accumulator a frame error can be detected easily by checking if the bit error count for a frame differs from zero. This split in functionality simplifies testing for different parameters enormously because new software for the cpu can be written and compiled very quickly compared to synthesizing VHDL code for the FPGA part.
 
 circuitry
+
+\subsection{Possible Improvements}
+More pipelining
+In and output double buffering
+More pipeline stages
+u no dependency optimization

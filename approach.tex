@@ -16,7 +16,7 @@ The values from the channel are converted to LLRs $y_n$. These initial LLR value
 \item{Check Node Step}\\
 Each check node $m$ receives the messages from the variable nodes and calculates its response message.
 \begin{equation}
-    r_{mn} = \left( \prod_{n' \in M(m)\setminus }\sign(q_{n'm}) \right) \min_{n' \in M(m) \setminus n}(\left|q_{n'm}\right|)
+    r_{mn} = \left( \prod_{n' \in M(m)\setminus n}\sign(q_{n'm}) \right) \min_{n' \in M(m) \setminus n}(\left|q_{n'm}\right|)
 \end{equation}
 
 \item{Variable node step}\\
@@ -133,7 +133,7 @@ Each check node requires as many inputs as there are ones in each row of the par
         \node (llr) [above left=0cm and 2cm of plus] {$y_n$};
         \node (vals) [left=0cm and 2cm of plus] {$r_{mn}$};
         \node [below=0.2cm of vals] {\vdots};
-        \node (res) [right=2cm of plus] {$S_n$};
+        \node (res) [right=2cm of plus] {$L_n$};
         \draw [->] (plus) -- (res);
         \draw [->] (vals) -- (plus);
         \draw [->] (llr) -| ($(llr)!0.6!(plus)$) |- ([yshift=20mm]plus);

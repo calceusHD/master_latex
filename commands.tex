@@ -38,6 +38,7 @@
 	]{todonotes}
 \usepackage[tikz]{bclogo}
 \usepackage[binary-units=true]{siunitx}
+\usepackage{tabularx}
 \usepackage{varwidth}
 \sisetup{locale = DE}
 \usepackage{xcolor}
@@ -51,6 +52,7 @@
 \usepackage{lastpage}
 \usepackage{import}
 %\newunicodechar{ß}{{\ss{}}}
+\usepackage[siunitx]{circuitikz}
 \usepackage[normalem]{ulem}
 \usepackage{rubfonts2009}
 \usepackage[autostyle=true]{csquotes}
@@ -118,6 +120,7 @@
 %\end{leftbar}
 %\end{bclogo}
 }
+\newcolumntype{Y}{>{\centering\arraybackslash}X}
 	
 \pgfplotscreateplotcyclelist{hollow}{%
 	mark=o,color=red,thick\\%

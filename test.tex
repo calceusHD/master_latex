@@ -8,19 +8,29 @@
 \usepackage{pgfplotstable}
 \usepackage{bm}
 \usepackage{amssymb}
+\usepackage[siunitx]{circuitikz}
 \usetikzlibrary{shapes, arrows.meta, positioning, decorations.pathmorphing, math, calc, fit, chains, matrix, decorations.pathreplacing, decorations.markings}
 
 \pgfplotsset{compat=1.15}
+\newcommand{\mosfet}[1]{%
+    \draw (#1.B) -- ($(#1.B)+(0.3,0)$);%
+    \draw ($(#1.B)+(0.3,0.3)$) -- ($(#1.B)+(0.3,-0.3)$);%
+    \draw ($(#1.B)+(0.4,0.3)$) -- ($(#1.B)+(0.4,-0.3)$);%
+    \draw ($(#1.B)+(0.5,0.4)$) -- ($(#1.B)+(0.5,-0.4)$);%
+    \draw ($(#1.B)+(0.5,0.3)$) -| (#1.D);
+    \draw ($(#1.B)+(0.5,-0.3)$) -| (#1.S);
+}
+
 \begin{document}
 \begin{tikzpicture}
-    \node [rectangle, draw, minimum width=3cm, minimum height=3cm] {};
-    \node (plus) [rectangle, draw, minimum height=2cm] {+};
-    \node (llr) [above left=0cm and 2cm of plus] {$y_n$};
-    \node (vals) [left=0cm and 2cm of plus] {$r_{mn}$};
-    \node [below=0.2cm of vals] {\vdots};
-    \node (res) [right=2cm of plus] {$L_n$};
-    \draw [->] (plus) -- (res);
-    \draw [->] (vals) -- (plus);
-    \draw [->] (llr) -| ($(llr)!0.6!(plus)$) |- ([yshift=20mm]plus);
+    \begin{semilogyaxis}[width=11cm, xlabel={$E_b / N_0$} in dB, ylabel={Error Rate}, legend pos=south west]
+        \pgfplotstableread{data/sw_norm_params.dat}\paramopt
+        \foreach \x in {1,...,11} {
+            \addplot table [col sep=tab,x index={0}, y index={\x}] {\paramopt};
+            \pgfplotstablegetcolumnnamebyindex{\x}\of{\paramopt}\to{\colname}
+            \addlegendentryexpanded{Normalization \colname}
+        }
+    \end{semilogyaxis}
 \end{tikzpicture}
+    
 \end{document}

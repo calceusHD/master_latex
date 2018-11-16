@@ -14,7 +14,23 @@ When describing a block code there are important parameters as the message lengt
 In this case error correction code are used to add additional information to data to allow errors. The errors are then corrected with that information. The addition of additional information is also called redundancy. With this redundancy it is possible to lose information while data is transmitted over a channel and decode it after the channel. After decoding the original data is recovered by using the additional information. \cref{channel_basic} shows such a system where information is transmitted, the channel can be of different type. It can for example be a wireless transmission or memory where information is first stored and later read back. 
 
 \begin{figure}
-	\includegraphics[width=10cm]{information_channel.png}
+	\begin{tikzpicture}[
+		elem/.style={draw,rectangle,node distance=1cm,align=center,minimum width=.5cm, minimum height=.5cm},
+		circ/.style={draw,circle,node distance=1cm,align=center,minimum width=.5cm, minimum height=.5cm},
+		branch/.style={fill,shape=circle,minimum size=3pt,inner sep=0pt}]
+		\node (src) [elem] {Information \\ Source};
+		\node (cod) [elem,right=of src] {Channel \\ Coding};
+		\node (cha) [elem,right=of cod] {Channel};
+		\node (dec) [elem,right=of cha] {Channel \\ Decoding};
+		\node (snk) [elem,right=of dec] {Information \\ Sink};
+		\node (noi) [elem,below=of cha] {Noise};
+	
+		\draw [->] (src) -- (cod);
+		\draw [->] (cod) -- (cha);
+		\draw [->] (cha) -- (dec);
+		\draw [->] (dec) -- (snk);
+		\draw [->] (noi) -- (cha);
+	\end{tikzpicture}
 	\centering
 	\caption{A basic channel where information is transmitted}	
 	\label{channel_basic}

@@ -10,7 +10,26 @@ As the encoded message is passed through a channel I will introduce some basic c
 The binary erasure channel is characterized with a single parameter $0 \leq \alpha < 1$ the erasure probability. The symbol for an erasure is $?$, therefore the output alphabet is $\mathcal{Y} = \{1, -1, ?\}$. The channel outputs $x$ with probability $1 - \alpha$ and $?$ with probability $\alpha$. \cref{bec_schema} shows the transitions for a BEC. So for a codeword with large length $n$ there will be $(1 - \alpha)n$ correct symbols, this suggests that the maximum rate is $1 - \alpha$. Elias\cite{El55} shows that this rate can be archived and also proves that this is the capacity.
 
 \begin{figure}
-	\includegraphics[width=5cm]{bec_schema.png}
+	\begin{tikzpicture}[
+		all/.style={node distance=0.8cm, minimum width=0.5cm, minimum height=0.5cm},
+		elem/.style={draw,rectangle,node distance=1cm,align=center,minimum width=.5cm, minimum height=.5cm},
+		circ/.style={draw,circle,node distance=1cm,align=center,minimum width=.5cm, minimum height=.5cm},
+		branch/.style={fill,shape=circle,minimum size=3pt,inner sep=0pt}]
+		\node (in) {In};
+		\node (out) [all,right=3cm of in] {Out};
+		\node (in1) [all,below=of in] {$1$};
+		\node (spa) [all,below=of in1] {};
+		\node (in0) [all,below=of spa] {$0$};
+		\node (ou1) [all,below=of out] {$1$};
+		\node (ouq) [all,below=of ou1] {$?$};
+		\node (ou0) [all,below=of ouq] {$0$};
+	
+		\draw [->] (in1) -- node [above] {$1-\alpha$} (ou1);
+		\draw [->] (in0) -- node [above] {$1-\alpha$} (ou0);
+		\draw [->] (in1) -- node [above] {$\alpha$} (ouq);
+		\draw [->] (in0) -- node [above] {$\alpha$} (ouq);
+	
+	\end{tikzpicture}
 	\centering
 	\caption{Symmetric binary erasure channel}
 	\label{bec_schema}
@@ -21,7 +40,25 @@ The binary erasure channel is characterized with a single parameter $0 \leq \alp
 A binary symmetric channel has the output alphabet $\mathcal{Y} = \{1, -1\}$. An incoming symbol has the probability $p$ to create a crossover. With probability $1 - p$ the symbol is correctly transmitted and with probability $p$ it is flipped. In \cref{bsc_schema} a graph shows these probabilities. A binary symmetric channel with crossover probability $p$ has the capacity $1 - H(p)$ with $H(p) = -p \log_2 p - (1 - p) \log_2 (1 - p)$ being the binary entropy function.
 
 \begin{figure}
-	\includegraphics[width=5cm]{bsc_schema.png}
+	\begin{tikzpicture}[
+		all/.style={node distance=0.8cm, minimum width=0.5cm, minimum height=0.5cm},
+		elem/.style={draw,rectangle,node distance=1cm,align=center,minimum width=.5cm, minimum height=.5cm},
+		circ/.style={draw,circle,node distance=1cm,align=center,minimum width=.5cm, minimum height=.5cm},
+		branch/.style={fill,shape=circle,minimum size=3pt,inner sep=0pt}]
+		\node (in) {In};
+		\node (out) [all,right=3cm of in] {Out};
+		\node (in1) [all,below=of in] {$1$};
+		\node (spa) [all,below=of in1] {};
+		\node (in0) [all,below=of spa] {$0$};
+		\node (ou1) [all,below=of out] {$1$};
+		\node (ouq) [all,below=of ou1] {};
+		\node (ou0) [all,below=of ouq] {$0$};
+	
+		\draw [->] (in1) -- node [above] {$1-p$} (ou1);
+		\draw [->] (in0) -- node [above] {$1-p$} (ou0);
+		\draw [->] (in1) -- node [above,pos=0.7] {$p$} (ou0);
+		\draw [->] (in0) -- node [above,pos=0.7] {$p$} (ou1);
+	\end{tikzpicture}
 	\centering
 	\caption{Symmetric binary symmetric channel}
 	\label{bsc_schema}
@@ -31,7 +68,19 @@ A binary symmetric channel has the output alphabet $\mathcal{Y} = \{1, -1\}$. An
 The additive white gaussian noise (AWGN) channel is the most important noise model for me as it characterizes flash memory well. It has a continuos output alphabet $\mathcal{Y}$. The model for the channel is $y = x + z$ where the input is $x \in \mathcal{X}$. $z$ is a variable with normal distribution with $0$ mean and variance $\sigma^2$. It has the distribution $f(z) = \frac{1}{\sqrt{2 \pi \sigma^2}}\exp(-\frac{z^2}{2 \sigma^2})$. The capacity for this channel is $\frac{1}{2} \log_2(1 + \frac{1}{\sigma^2})$ as the Shannon limit shows. Often it is preferable to allow scaling of the input, so we use a signal to noise ratio $E_b / \sigma^2$. This allows the inputs to be arbitrary values then $E_b$ is the energy of the transmission of a single bit. The $\sigma^2$ is frequently called $N_0$, the energy of the noise that is added in a single bit transmission. When using $E_b / N_0$ the capacity is $\frac{1}{2} \log_2(1 + \frac{E_b}{N_0})$. For example when having a rate of $\frac{1}{2}$ we get a minimum signal to noise ratio required of 1.
 
 \begin{figure}
-	\includegraphics[width=5cm]{awgn_schema.png}
+	\begin{tikzpicture}[
+		all/.style={node distance=0.8cm, minimum width=0.5cm, minimum height=0.5cm},
+		elem/.style={draw,rectangle,node distance=1cm,align=center,minimum width=.5cm, minimum height=.5cm},
+		circ/.style={draw,circle,node distance=1cm,align=center,minimum width=.5cm, minimum height=.5cm},
+		branch/.style={fill,shape=circle,minimum size=3pt,inner sep=0pt}]
+		\node (in) {In};
+		\node (add) [circ,right=of in] {$+$};
+		\node (out) [all,right=of add] {Out};
+		\node (noi) [below=of add] {$\mathcal{N}(0, \sigma^2)$};
+		\draw [->] (in) -- (add);
+		\draw [->] (add) -- (out);
+		\draw [->] (noi) -- (add);
+	\end{tikzpicture}
 	\centering
 	\caption{Additive White Gaussian Noise Channel}
 	\label{awgn_schema}

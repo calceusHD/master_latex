@@ -58,7 +58,7 @@ The simulation implementation of the decoder is written as a Python script I run
 The basic min sum algorithm serves as a baseline for the upcoming improvements. I ran it for two different LDPC codes. Both of them are used by 802.11n for error correction. I chose to use the codes with rate $0.5$ as there is a lot of information available.
 \begin{figure}
     \begin{tikzpicture}
-        \begin{semilogyaxis}[xlabel={$E_b / N_0$} in dB, ylabel={Error Rate}]
+        \begin{semilogyaxis}[xlabel={$E_b / N_0$} in dB, ylabel={Error Rate}, legend pos=south west]
             \addplot table [col sep=tab,x={{Eb/N0 in dB}}, y={FER 648}] {data/sw_err_simple.dat};
             \addlegendentry{FER 648}
             \addplot table [col sep=tab,x={Eb/N0 in dB}, y={BER 648}] {data/sw_err_simple.dat};
@@ -76,11 +76,13 @@ The basic min sum algorithm serves as a baseline for the upcoming improvements. 
     \label{min_sum_base}
 \end{figure}
 
+\cref{min_sum_base} shows performance of the basic min sum decoder. Here the waterfall region of the LDPC decoder is visible. I was not able to gather performance data for lower error rates because the software implementation is not optimized for speed.
+
 \subsubsection{Normalized Min-sum}
 
 \begin{figure}
     \begin{tikzpicture}
-        \begin{semilogyaxis}[xlabel={$E_b / N_0$} in dB, ylabel={Error Rate}]
+        \begin{semilogyaxis}[width=11cm, xlabel={$E_b / N_0$} in dB, ylabel={Error Rate}, legend pos=south west]
             \pgfplotstableread{data/sw_norm_params.dat}\paramopt
             \foreach \x in {1,...,11} {
                 \addplot table [col sep=tab,x index={0}, y index={\x}] {\paramopt};
@@ -90,10 +92,10 @@ The basic min sum algorithm serves as a baseline for the upcoming improvements. 
         \end{semilogyaxis}
     \end{tikzpicture}
     \centering
-    %\todo{nononono}
+    \label{min_sum_norm_opt}
     \caption{Bit Error Rates of the Normalized Min Sum Algorithm for Different Normalization Factors}
-    \label{min_sum_base}
 \end{figure}
+
 
 \subsubsection{Adaptive Normalized Min-sum}
 I was not able to improve the performance of the system by using the adaptive normalized min sum algorithm. The performance was on par with the normalized min sum and almost independent of the suppression parameter. 
@@ -202,7 +204,7 @@ begin
     end generate;
 end architecture;
 \end{lstlisting}
-but this generates huge hardware. The primary problem is the synthesis generates a division to implement the modulo operations. In the following I will show that the modulo can in this case be replaced by a conditional addition or subtraction. But first I have to set some limits for the inputs. I only allow roll values in the range $0 \leq$ \lstinline{roll_count} $<$ \lstinline{data_in'length}. From that and the possible values for $i$ I get $0 \leq + $ \lstinline{roll_count} $ < 2$ \lstinline{data_in'length}. Knowing this I can replace the modulo with a conditional addition or subtraction depending on the shift direction. So the lines writing to \lstinline{data_out} are replaced by:
+but this generates huge hardware. One of the primary problems is the synthesis generates a division to implement the modulo operations. In the following I will show that the modulo can in this case be replaced by a conditional addition or subtraction. But first I have to set some limits for the inputs. I only allow roll values in the range $0 \leq$ \lstinline{roll_count} $<$ \lstinline{data_in'length}. From that and the possible values for $i$ I get $0 \leq + $ \lstinline{roll_count} $ < 2$ \lstinline{data_in'length}. Knowing this I can replace the modulo with a conditional addition or subtraction depending on the shift direction. So the lines writing to \lstinline{data_out} are replaced by:
 \begin{lstlisting}
 data_out(i, j) <= data_in(add_mod(i - to_integer(roll_count), data_in'length), j) when not DIRECTION 
     else data_in(sub_mod(i + to_integer(roll_count), data_in'length), j);
@@ -267,24 +269,70 @@ I used AXI-Stream interfaces to input the LLR values into the decoder and to out
 \subsection{Pipelining}
 If implemented without any pipeline steps the maximum clock for the 648 bits message length, rate $0.5$, and 7 bit LLR is ~27Mhz\todo{check real val}. By adding registers between some steps I reduce the critical path. By adding two stages I increase the maximum clock rate to ~70Mhz\todo{test}. The pipeline stages are added between the local check node and the first barrel roll and after the second barrel roll. These position were determined by check the critical path timing in Vivado and adding registers to achieve a maximum critical path length of 10ns as to get a 100Mhz clock. \todo{i prolly need one after the global check node to get the memory timing better}
 
-\section{Data Source}
+\subsection{Data Source}
 For evaluating the whole pipeline a source of data to be encoded is required. I used a uniform random number generator. The numbers were generated using a Tausworthe generator\cite{Ec96}. I implemented it in a straightforward manner in VHDL. There were no difficulties as it consists of static shifts and bit boolean operators.
 
-\section{Channel Model}
+\subsection{Channel Model}
 To test an error correction scheme a source of errors is required. This would usually be the flash memory in an solid state drive, but here I simulate it using gaussian noise. The gaussian noise is generated with the Box-Muller method using the hardware approach from Dong-U Lee, John D. Villasenor and Wayne Luk and Philip H. W. Leong\cite{LeVi06}. Here I used Vivado HLS to create the hardware. The Box-Muller method requires fixed point numbers and with high level synthesis it is very fast to write the code for such a noise generator.
 
 My tests concluded the Box Muller method is to hardware intensive when build with high level synthesis. I used a very efficient design by David B. Thomas\cite{Th14} which uses less resources of the FPGA. The class of gaussian number generators described in Thomas paper have different qualities depending on the internal bitwidths. I chose the one with the highest quality as it is still smaller than my Box-Muller implementation. To interface with my existing design I wrote an axi stream frontend to simply replace the other number generator. The Box-Muller method used for example 6845 LUTs compared to ~683 LUTs for this method. The output from the generator is a 26 bit fixed point number with 6 bit integer part.
 
-\section{LLR Conversion}
-The LLR calculation is done as descibed in \cref{llr_approach}. The hardware block for the LLR takes $y_i$ and $\frac{2}{\sigma^2}$ is precomputed on the ARM core and then sent as a 32 bit fixed point number with 5 bit integer part to the programmable system. The result of this conversion is then rounded to the number of bits the encoder is using.
+\subsection{LLR Conversion}
+The LLR calculation is done as descibed in \cref{llr_approach}. The hardware block for the LLR takes $y_i$ and $\frac{2}{\sigma^2}$ is precomputed on the ARM core and then sent as a 32 bit fixed point number with 5 bit integer part to the programmable system. The output of the channel is of bit width to that no rounding or overflow can occur. The result of this conversion is then rounded to the number of bits the encoder is using.
 
-\section{Result Accumulation}
-The results of each decoding are compared to the input to the channel. As the output of the decoder is a 32 bit axi stream multiple word have to be compared for each decoding. The Hamming distance between the expected and decoded codeword is then sent to ARM core.
+\subsection{Result Accumulation}
+The results of each decoding are compared to the input to the channel. As the output of the decoder is a 32 bit axi stream multiple word have to be compared for each decoding. The Hamming distance between the expected and decoded codeword is summed over all the words within one frame and then sent to ARM core.
 
-\section{Control}
+\subsection{Control}
 The whole system is controlled by the ARM core of the SoC. The parameters of the test system are set first by the ARM and then the encoder decoder core is set to run. While it is running the bit error counts of each transmission are read out and summed. As each frame is handled separately by the result accumulator a frame error can be detected easily by checking if the bit error count for a frame differs from zero. This split in functionality simplifies testing for different parameters enormously because new software for the cpu can be written and compiled very quickly compared to synthesizing VHDL code for the FPGA part.
 
-circuitry
+
+\subsection{Results}
+The complete system was implemented on a ZedBoard with the ARM cpu controlling the test parameters for the encoder and decoder. \cref{all_use} shows the resource utilization of the project. In this case I used the decoder with 7 Bit LLR. Two decoders were implemented together on the FPGA to achieve higher throughput while testing. 
+\begin{table}
+    \begin{tabularx}{11.5cm}{l Y Y Y Y}
+        & Overall & Codec Block & Decoder & AWGN Generators \\ \toprule
+        Slice LUTs & 34387 (64.64\%) & 16537 (31.08\%) & 8706 (16.36\%) & 1411 (2.65\%) \\ \midrule
+        Block RAM & 32 (22.86\%) &  15.5 (11.07\%) & 13.5 (9.64\%) & 2 (1.43\%) \\ \midrule
+        DSP & 32 (14.55\%) & 16 (7.27\%) & 0 & 8 (3.64\%) \\ \bottomrule
+        %Troughput & number? & number & - & - maybe add troughput but it aint so easy to measure so im not shure if can do it in time
+    \end{tabularx}
+    \centering
+    \caption{Overall Hardware Usage of the Test System Post Implementation}
+    \label{all_use}
+\end{table}
+To achieve optimal performance of the decoder the input parameters have to be optimized. Especially the normalized min sum decoder is sensitive to the Normalization parameter. Therefore it is required to test the decoder with different parameters sets to find optimal decoding conditions. So I ran different tests first to find the best input scaling factor. For that I did a coarse sweep over the available number space.
+\newcommand{\addgraph}[2]{\addplot table [col sep=tab,x index={0}, y index={#2}] {#1};
+	\pgfplotstablegetcolumnnamebyindex{#2}\of{#1}\to{\colname}
+	\addlegendentryexpanded{\colname}}
+\begin{figure}
+    \begin{tikzpicture}
+		\begin{semilogyaxis}[width=14cm,height=10cm,xlabel={$E_b / N_0$} in dB, ylabel={Error Rate}, legend pos=south west]
+			\pgfplotstableread[col sep=tab]{data/hw_opt_bit_val_coarse.dat}\hwoptbitbal
+			\foreach \x in {1,...,10} {
+				\addgraph{\hwoptbitbal}{\x};
+			}
+		\end{semilogyaxis}
+    \end{tikzpicture}
+    \centering
+    \caption{Sweeping the Input Scaling Factor with 802.11 LDPC code 648 Bit block length and rate 0.5}
+    \label{hw_opt_coarse}
+\end{figure}
+From \cref{hw_opt_coarse} I deduce that the scaling factor should be small so to optimize it further I swept a smaller range with more values. Even though \cref{hw_opt_coarse} only shows values up to 9 the sweep continues up to the maximum input but there is no other optimum in the error performance. So the smaller range results in \cref{hw_opt_fine} show the optimal value being 0.75 for this system. So in the further analysis this is the value I used as the scaling factor.
+\begin{figure}
+    \begin{tikzpicture}
+		\begin{semilogyaxis}[width=14cm,height=10cm,xlabel={$E_b / N_0$} in dB, ylabel={Error Rate}, legend pos=south west]
+			\pgfplotstableread[col sep=tab]{data/hw_opt_bit_val_fine.dat}\hwoptbitbal
+			\foreach \x in {1,...,10} {
+				\addgraph{\hwoptbitbal}{\x};
+			}
+		\end{semilogyaxis}
+    \end{tikzpicture}
+    \centering
+    \caption{Sweeping the Input Scaling Factor with 802.11 LDPC code 648 Bit block length and rate 0.5}
+    \label{hw_opt_fine}
+\end{figure}
+As 
 
 \subsection{Possible Improvements}
 More pipelining

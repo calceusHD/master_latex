@@ -10,15 +10,80 @@ Flash memory often in the form of solid state drives (SSD) are becoming more and
 NAND flash which will be discussed is of most interest for SSDs due to its high density and therefore lower cost per bit. \cref{fg_tans} shows a floating gate transistor which is used to store data. By inserting charge into the floating gate it is possible to change the threshold voltage of the transistor. Multiple of these floating gate transistor are connected in series to for a so called NAND string. In this nand string the drain and source neighboring transistors are connected to form a continuos string as seen in \cref{nand_string}. Also on the top is a normal bit line select transistor to connect the string to be read to a bit line. On the bottom is the ground select transistor to connect the string to ground\cite[p.~22-24]{MiMa18}.
 
 \begin{figure}
-    \includegraphics[width=5cm]{fg_schema.png}
+    \begin{tikzpicture}[
+        all/.style={node distance=0.8cm, minimum width=0.5cm, minimum height=0.5cm},
+        reverseclip/.style={insert path={(-99cm,-99cm) rectangle (99cm,99cm)}},
+        elem/.style={draw,rectangle,node distance=1cm,align=center,minimum width=.5cm, minimum height=.5cm},
+        circ/.style={draw,circle,node distance=1cm,align=center,minimum width=.5cm, minimum height=.5cm},
+        branch/.style={fill,shape=circle,minimum size=3pt,inner sep=0pt}]
+        \draw (0,0) rectangle (3,1);
+        \draw (1,1) rectangle (2,1.2);
+        \draw (1,1.2) rectangle (2,1.4);
+        \draw (1,1.4) rectangle (2,1.6);
+        \draw (1,1.6) rectangle (2,1.8);
+        \draw (1.5,1.8) -- (1.5,2.3);
+        \draw (0.5,1) -- (0.5,1.5);
+        \draw (2.5,1) -- (2.5,1.5);
+        \node (te1) at (3, 2) [anchor=west] {Floating Gate};
+        \node (te2) [above=0mm of te1] {Insulator};
+        \node (te3) [above=0mm of te2] {Gate};
+        \draw (te1.west) -- (2,1.3);
+        \draw (te2.west) -- (2,1.1);
+        \draw (te2.west) -- (2,1.5);
+        \draw (te3.west) -- (2,1.7);
+        \node (te3) at (2.5,1.2) [anchor=west] {Drain};
+        \node (te3) at (0.5,1.2) [anchor=east] {Source};
+        \node (cha) at (2,-0.5) {Channel};
+        \draw (cha) -- (1.5,0.8);
+        \begin{scope}
+            \clip (0,1) rectangle (1, 0.5);
+            \draw (0.2,1) circle (0.5);
+        \end{scope}
+        \begin{scope}
+            \clip (3,1) rectangle (2, 0.5);
+            \draw (2.8,1) circle (0.5);
+        \end{scope}
+        \begin{scope}       
+            \begin{pgfinterruptboundingbox}
+                \clip[reverseclip] (2.8,1) circle (0.5);
+                \clip[reverseclip] (0.2,1) circle (0.5);
+            \end{pgfinterruptboundingbox}
+            \draw (0,0.8) -- (3,0.8);
+        \end{scope}
+    \end{tikzpicture}
     \centering
     \caption{A floating gate field effect transistor}
     \label{fg_tans}
 \end{figure}
 
+\newcommand{\mosfet}[1]{%
+    \draw (#1.B) -- ($(#1.B)+(0.3,0)$);%
+    \draw ($(#1.B)+(0.3,0.3)$) -- ($(#1.B)+(0.3,-0.3)$);%
+    \draw ($(#1.B)+(0.4,0.3)$) -- ($(#1.B)+(0.4,-0.3)$);%
+    \draw ($(#1.B)+(0.5,0.4)$) -- ($(#1.B)+(0.5,-0.4)$);%
+    \draw ($(#1.B)+(0.5,0.3)$) -| (#1.D);
+    \draw ($(#1.B)+(0.5,-0.3)$) -| (#1.S);
+}
 
 \begin{figure}
-    \includegraphics[width=5cm]{nand_schema.png}
+    \begin{tikzpicture}
+        \draw (0,0) node[nmos] (GS) {};
+        \draw (0,1.2) node[nmos,opacity=0.0](T1) {};
+        \mosfet{T1}
+        \foreach \x in {2,...,4} {  
+            \draw ($(0,0)+(0,\x * 1.2)$) node[nmos,opacity=0.0](T\x) {};
+            \mosfet{T\x}
+        }
+        
+        
+        \draw (0,6) node[nmos] (BLS) {};
+        \node [short, *-*] at (BLS.D) {};
+        \node [above=of BLS.D] {Bit line};
+        \node [left=of BLS.B] {Bit line select};
+        \draw [decorate,decoration={brace,amplitude=10pt,raise=4pt},yshift=0pt] (T1.B) -- (T4.B) node [black,midway,left,anchor=east,xshift=-1cm] {Word lines};
+        \node [left=of GS.B] {Ground select};
+        \draw (GS.S) node[rground] {};
+    \end{tikzpicture}
     \centering
     \caption{Multiple transistors are arranged to make a NAND string}
     \label{nand_string}
@@ -30,14 +95,39 @@ NAND Flash is arranged into blocks and pages. Due to its arrangement NAND memory
 To read a page the select word line is set at the read voltage. This read voltage is between the threshold voltage for a programmed and unprogrammed cell. Thus if the cell was programmed it will not conduct, on the other hand if it was unprogrammed the applied gate voltage is above the threshold voltage and the cell conducts. In \cref{nand_th} an example distribution for cell threshold voltages can be seen. The voltage at the bit line is measured using a read amplifier which then outputs the data. 
 
 \begin{figure}
-    \includegraphics[width=5cm]{nand_array.png}
+    \begin{tikzpicture}
+        \coordinate (gsl) at (-1.5,0.6);
+        \draw (gsl) -- (7,0.6);
+        \node [left=of gsl] {Ground select};
+        \foreach \x in {1,...,4} {  
+            \coordinate (wl\x) at ($(-1.5,0.6)+(0,\x * 1.2)$);
+            \draw (wl\x) -- ($(7,0.6)+(0,\x* 1.2)$);
+        }
+        \coordinate (bll) at (-1.5,6.6);
+        \draw (bll) -- (7,6.6);
+        \node [left=of bll] {Bit line select};
+        \draw [decorate,decoration={brace,amplitude=10pt,raise=4pt},yshift=0pt] (wl1) -- (wl4) node [black,midway,left,anchor=east,xshift=-1cm] {Word lines};
+        \foreach \y in {0,2,...,6} {
+            \draw (\y,0) node[nmos] (GS\y) {};
+            \draw (GS\y.G) to[short, -*] (GS\y.G |- 10,0.6);
+            \foreach \x in {1,...,4} {  
+                \draw ($(\y,0)+(0,\x * 1.2)$) node[nmos,opacity=0.0](T\x-\y) {};
+                \mosfet{T\x-\y}
+                \draw (T\x-\y.G) to [short, -*] (T\x-\y.G |- wl\x);
+            }
+            \draw (\y,6) node[nmos] (BLS\y) {};
+            \draw (GS\y.S) node[rground] {};
+            \draw (BLS\y.G) to [short, -*] (BLS\y.G |- bll);
+        }
+        \draw [decorate,decoration={brace,amplitude=10pt,raise=4pt},yshift=0pt] (BLS0.D) -- (BLS6.D) node [black,midway,above,yshift=0.6cm] {Bit lines};
+    \end{tikzpicture}
     \centering
     \caption{Array Organization of NAND memory}
     \label{nand_array}
 \end{figure}
 
 \subsection{Erasing}
-Erasing is done by lifting the substrate voltage to to high potential while keeping the gate voltage low. This forces the electrons trapped inside the floating gate through the insulator into the substrate. As the charge is now removed from the gate the threshold voltage is reduced to the erased state. The erase is done a whole block built like \cref{nand_array} at a time.
+Erasing is done by lifting the substrate voltage to to high potential while keeping the gate voltage low. This forces the electrons trapped inside the floating gate through the insulator into the substrate. As the charge is now removed from the gate the threshold voltage is reduced to the erased state. The erase is done a whole block at a time. In \cref{nand_array} is part of the structure of a nand memory. There each column is a bit line and the bit lines of multiple block are connected together. One row of flash cells is called a page.
 
 \subsection{Programming}
 When Programming the word line for the selected page is set to a high voltage. The bit lines where the cells should be programmed are kept at 0V. All other bit lines are set to high voltage to inhibit them. When the bit line is set to a high voltage the channel of the target cell is also at this voltage so the gate and channel are both at the hight potential.
@@ -49,7 +139,14 @@ When Programming the word line for the selected page is set to a high voltage. T
     \label{nand_th}
 \end{figure}
 
-\section{Error Types}
-
-
-\cite{ZaTu16}
+\section{Errors}Flash Memory Summit 2012
+The distribution of the threshold voltage can be modeled an an gaussian distribution\cite{ZaTu16}. When the cell is unprogrammed the mean of the distribution is lower. And when a cell is programmed the distribution is shifted to a higher voltage level. The errors introduced by the flash memory have different sources. In the following I will give an overview of the errors in flash memory.
+\paragraph{Program / Erase Errors}
+As the flash cells are subjectes to programs and erase cycles they might fail to reset fully to the erased state. Also the threshold distribution of programmed cells changes. This happens due to trapped electrons inside the tunnel oxide. These trapped electrons accumulate over multiple write cycles. As more writes are performed to a block the error rate will rise continually.
+\paragraph{Cell to Cell Program Interference}
+The cells in the memory array are close together. This leads to parasitic capacitive coupling between close cells. When adjacent cells are programmed this changes the state of a cell. The shift in threshold voltage can over time move a cell into a different state.
+\paragraph{Data Retention Errors}
+While data is stored in a cell the charge leaks out over time. This is the largest source of errors in flash memory. Over time electrons leak out of the cell and change the cells voltage level. Especially newer flash memory stores only few electrons on the floating gate. Here loss of even a few electrons might change the threshold voltage enough to introduce an error\cite{YoGa12}.
+\paragraph{Read Disturb}
+When reading data from a flash cells the threshold voltage of a cell in the same block can be shifted slightly. These shifts are very small but a multitude of read operation can cumulatively change the threshold voltage of a cell enough to introduce an error.
+\cite{CaGh17}

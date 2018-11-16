@@ -30,9 +30,6 @@
 \usepackage{amssymb}
 \usepackage{pgfplotstable}
 \usepackage{caption}
-\usepackage[
-%disable
-]{todonotes}
 \usepackage[final]{pdfpages}
 \usepackage{etoolbox}
 \usepackage[backend=bibtex]{biblatex}
@@ -59,13 +56,13 @@
 % \usepackage{tabularx}
 % \usepackage{mathptmx,amsmath}
 \usepackage{graphicx}
-\addbibresource{../database.bib}
+\bibliography{database.bib}
 \linespread{1.3} % increase baselineskip (spacing between lines)
 \title{Design and Implementation of an LDPC-based FEC encoder/decoder suitable for Storage devices}
 % \subtitle[]{}
 \author[Henry Bathke]{Henry Bathke}
 \institute[RUB-ESIT]{Ruhr University of Bochum \linebreak Chair for Embedded Systems for Information Technology}
-\date{15. March 2018}
+\date{15. November 2018}
 \usetikzlibrary{shapes, arrows.meta, positioning, decorations.pathmorphing, math, calc}
 \setbeamercolor{framesubtitle}{fg=gelbgruen}
 
@@ -76,6 +73,7 @@
 	mark=triangle,color=blue,thick\\%
 	mark=diamond,color=black,thick\\%
 }
+
 
 
 
@@ -97,7 +95,7 @@
 
 \DeclareMathOperator{\sign}{sign}
 \DeclareMathOperator*{\argmin}{arg\,min}
-\graphicspath{ {image/} }
+\graphicspath{ {../image/} }
 
 \setbeamercovered{invisible}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%     Title Page     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -177,14 +175,14 @@
 \end{frame}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%     Approach     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+\section{Encoding}
 \begin{frame}[fragile]
 	\frametitle{Encoding}
 	\begin{itemize}
 		\item Is usually done with generator matrix
 		\item The generator matrix is dense due to the inversion
 		\item With long codes the dense matrix multiplication is large
-		\item Use transforms on the PCM to convert it into a more desireable form\cite{QiGo07}
+		\item Use transforms on the PCM to convert it into a more desireable form%\cite{QiGo07}
 	\end{itemize}
 	
 \end{frame}
@@ -252,7 +250,7 @@
 \end{frame}
 
 
-\section{Encoding}
+
 \begin{frame}
 	\frametitle{Encoding}
 	\begin{itemize}
@@ -304,7 +302,7 @@
 	\frametitle{Decoding}
 	\begin{itemize}
 		\item I implemented a message passing decoder
-		\item Messages are passed along the edges on the tanner graph\cite{Ta81}
+		\item Messages are passed along the edges on the tanner graph%\cite{Ta81}
 		\item Computations are done on the nodes
 	\end{itemize}
 	\begin{tikzpicture}[
@@ -350,13 +348,23 @@
 	\frametitle{Decoding}
 	\begin{align*}
 		r_{mn} & = \left( \prod_{n' \in M(m) \setminus n}\sign(q_{n'm}) \right) \min_{n' \in M(m) \setminus n}(\left|q_{n'm}\right|) \\
-		q_{nm} & = y_n + \sum_{m' \in N(n) \setminus m}r_{m'n} \\
-		L_n & = y_n + \sum_{m \in N(n)}r_{m'n}
+		\only<2-> {
+			\\
+		}
+		L_n & = y_n + \sum_{m \in N(n)}r_{m'n} \\
+		\only<1> {
+		q_{nm} & = y_n + \sum_{m' \in N(n) \setminus m}r_{m'n} 
+		}
+		\only<2-> {
+			q_{nm} & = L_n - r_{mn} 
+		}
 	\end{align*}
-	\begin{itemize}
-		\item We have to implement these equations
-		\item Can exploit similarities
-	\end{itemize}
+	\only<1> {
+		\begin{itemize}
+			\item We have to implement these equations
+			\item Can exploit similarities
+		\end{itemize}
+	}
 \end{frame}
 
 \begin{frame}
@@ -369,7 +377,7 @@
 		elem/.style={draw,rectangle,node distance=0.5cm,align=center,minimum width=.5cm, minimum height=.5cm}
 	]
 		\node (mime) [elem] {Minimum Memory};
-		\node (sime) [elem,below=of mime] {Sigm Memory};
+		\node (sime) [elem,below=of mime] {Sign Memory};
 		\node (cngl) [elem,left=of sime] {Global\\Check Node};
 		\node (rot1) [elem,below=of cngl] {Barrel Shift};
 		\node (vnlo) [elem,below=of rot1] {Local\\Variable Node};
@@ -471,12 +479,20 @@
 			\matrix[style1=0.3cm,right=0.2cm of 1mat] (3mat) {
 				\infty \\ \infty \\ \infty \\ \infty \\ \infty \\ \infty \\ \infty \\ \infty \\ \infty \\
 			};
+
+			\matrix[style1=0.3cm,right=0.2cm of 3mat] (4mat) {
+				 \\  \\  \\  \\  \\  \\  \\  \\  \\
+			};
 		}
 		\visible<2> {
 			\draw (1mat-1-4.north west) rectangle (1mat-3-6.south east);
 			\draw (2mat-1-4.north west) rectangle (2mat-1-6.south east);
 			\matrix[style1=0.3cm,right=0.2cm of 1mat] (3mat) {
 				3 \\ 8 \\ 7 \\ \infty \\ \infty \\ \infty \\ \infty \\ \infty \\ \infty \\
+			};
+
+			\matrix[style1=0.3cm,right=0.2cm of 3mat] (4mat) {
+				3 \\ 8 \\ 7 \\  \\  \\  \\  \\  \\  \\
 			};
 		}
 		
@@ -486,6 +502,9 @@
 			\matrix[style1=0.3cm,right=0.2cm of 1mat] (3mat) {
 				2 \\ 5 \\ 7 \\ \infty \\ \infty \\ \infty \\ \infty \\ \infty \\ \infty \\
 			};
+			\matrix[style1=0.3cm,right=0.2cm of 3mat] (4mat) {
+				2 \\ 5 \\ 9 \\  \\  \\  \\  \\  \\  \\
+			};
 		}
 
 		\visible<4> {
@@ -494,9 +513,15 @@
 			\matrix[style1=0.3cm,right=0.2cm of 1mat] (3mat) {
 				2 \\ 5 \\ 7 \\ \infty \\ \infty \\ \infty \\ \infty \\ \infty \\ \infty \\
 			};
+
+			\matrix[style1=0.3cm,right=0.2cm of 3mat] (4mat) {
+				 \\  \\  \\  \\  \\  \\  \\  \\  \\
+			};
+
 		}
 	
 		\node [above=0.2cm of 3mat] {Running minimum};
+		\node [below=0.2cm of 4mat] {Shifted input};
 	\end{tikzpicture}
 	\centering
 \end{frame}
@@ -535,6 +560,19 @@
 		\draw [->] (fif) -| (com);
 		\draw [->] (com) -- (arm);
 	\end{tikzpicture}
+	\centering
+\end{frame}
+
+\begin{frame}
+	\frametitle{Performance Testing}
+	\framesubtitle{Block Design Implementation}
+	\includegraphics[width=\textwidth]{vivado_block_sub.png}
+\end{frame}
+
+\begin{frame}
+	\frametitle{Performance Testing}
+	\framesubtitle{Block Design Implementation}
+	\includegraphics[width=\textwidth]{vivado_block_top.png}
 \end{frame}
 
 \section{Results}
@@ -546,7 +584,7 @@
 	\frametitle{Simulation Results}
 	802.11n LDPC code with rate 0.5
 	\begin{tikzpicture}
-		\begin{semilogyaxis}[width=11cm,height=\axisdefaultheight-10mm,xlabel={$E_b / N_0$} in dB, ylabel={Error Rate}, legend pos=south west]
+		\begin{semilogyaxis}[width=11cm,height=\axisdefaultheight-5mm,xlabel={$E_b / N_0$} in dB, ylabel={Error Rate}, legend pos=south west]
 			
 			\only<1> {
 				\addgraph{\basesim}{1}
@@ -562,6 +600,7 @@
 
 		\end{semilogyaxis}
 	\end{tikzpicture}
+	\centering
 \end{frame}
 
 
@@ -615,26 +654,28 @@
 			}
 		\end{semilogyaxis}
 	\end{tikzpicture}
+	\centering
 \end{frame}
 
 \begin{frame}
 	\frametitle{Hardware Results}
 	I chose a scaling of 0.75
 	\begin{tikzpicture}
-		\begin{semilogyaxis}[width=11cm,height=\axisdefaultheight-10mm,xlabel={$E_b / N_0$} in dB, ylabel={Error Rate}, legend pos=south west]
+		\begin{semilogyaxis}[width=11cm,height=\axisdefaultheight-5mm,xlabel={$E_b / N_0$} in dB, ylabel={Error Rate}, legend pos=south west]
 			\pgfplotstableread[col sep=tab]{../data/hw_opt_bit_val_fine.dat}\hwoptbitbal
 			\foreach \x in {2,4,...,17} {
 				\cleanaddgraph{\hwoptbitbal}{\x};
 			}
 		\end{semilogyaxis}
 	\end{tikzpicture}
+	\centering
 \end{frame}
 
 \begin{frame}
 	\frametitle{Hardware Results}
 	\framesubtitle{Normalized Min Sum}
 	\begin{tikzpicture}
-		\begin{semilogyaxis}[width=11cm,height=\axisdefaultheight,xlabel={$E_b / N_0$} in dB, ylabel={Error Rate}, legend pos=south west]
+		\begin{semilogyaxis}[width=11cm,height=\axisdefaultheight+0.5cm,xlabel={$E_b / N_0$} in dB, ylabel={Error Rate}, legend pos=south west]
 			\pgfplotstableread[col sep=tab]{../data/hw_opt_norm.dat}\hwoptnorm
 			\addgraph{\basesim}{7}
 			\foreach \x in {5,...,8} {
@@ -642,6 +683,7 @@
 			}
 		\end{semilogyaxis}
 	\end{tikzpicture}
+	\centering
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%     Conclusion     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Conclusion and Outlook}
@@ -650,12 +692,13 @@
 	{\Large Conclusion}
 	\begin{itemize}
 		\item LDPC codes can be implemented on hardware
-		\item 
+		\item My Implementation has problematic error floor
 	\end{itemize}
 	{\Large Outlook}
 	\begin{itemize}
 		\item Look at power consumption
 		\item Optimize area utilization
+		\item Utilize reconfiguration / change instructions
 	\end{itemize}
 \end{frame}
 
@@ -666,11 +709,6 @@
 	Questions?
 \end{frame}
 
-\begin{frame}[allowframebreaks]
-	\frametitle{References}
-	\linespread{1}
-	\printbibliography
-\end{frame}
 
 \end{document}
 

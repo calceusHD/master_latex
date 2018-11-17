@@ -133,7 +133,61 @@ Erasing is done by lifting the substrate voltage to to high potential while keep
 When Programming the word line for the selected page is set to a high voltage. The bit lines where the cells should be programmed are kept at 0V. All other bit lines are set to high voltage to inhibit them. When the bit line is set to a high voltage the channel of the target cell is also at this voltage so the gate and channel are both at the hight potential.
 
 \begin{figure}
-    \includegraphics[width=5cm]{slc_vth_dist.png}
+    \pgfdeclaredecoration{discontinuity}{start}{
+    \state{start}[width=0.5\pgfdecoratedinputsegmentremainingdistance-0.5\pgfdecorationsegmentlength,next state=first wave]
+    {}
+    \state{first wave}[width=\pgfdecorationsegmentlength, next state=second wave]
+    {
+        \pgfpathlineto{\pgfpointorigin}
+        \pgfpathmoveto{\pgfqpoint{0pt}{\pgfdecorationsegmentamplitude}}
+        \pgfpathcurveto
+            {\pgfpoint{-0.25*\pgfmetadecorationsegmentlength}{0.75\pgfdecorationsegmentamplitude}}
+            {\pgfpoint{-0.25*\pgfmetadecorationsegmentlength}{0.25\pgfdecorationsegmentamplitude}}
+            {\pgfpoint{0pt}{0pt}}
+        \pgfpathcurveto
+            {\pgfpoint{0.25*\pgfmetadecorationsegmentlength}{-0.25\pgfdecorationsegmentamplitude}}
+            {\pgfpoint{0.25*\pgfmetadecorationsegmentlength}{-0.75\pgfdecorationsegmentamplitude}}
+            {\pgfpoint{0pt}{-\pgfdecorationsegmentamplitude}}
+    }
+    \state{second wave}[width=0pt, next state=do nothing]
+    {
+        \pgfpathmoveto{\pgfqpoint{0pt}{\pgfdecorationsegmentamplitude}}
+        \pgfpathcurveto
+            {\pgfpoint{-0.25*\pgfmetadecorationsegmentlength}{0.75\pgfdecorationsegmentamplitude}}
+            {\pgfpoint{-0.25*\pgfmetadecorationsegmentlength}{0.25\pgfdecorationsegmentamplitude}}
+            {\pgfpoint{0pt}{0pt}}
+        \pgfpathcurveto
+            {\pgfpoint{0.25*\pgfmetadecorationsegmentlength}{-0.25\pgfdecorationsegmentamplitude}}
+            {\pgfpoint{0.25*\pgfmetadecorationsegmentlength}{-0.75\pgfdecorationsegmentamplitude}}
+            {\pgfpoint{0pt}{-\pgfdecorationsegmentamplitude}}
+        \pgfpathmoveto{\pgfpointorigin}
+    }
+    \state{do nothing}[width=\pgfdecorationsegmentlength,next state=do nothing]{
+        %\pgfpathlineto{\pgfpointdecoratedinputsegmentlast}
+    }
+    \state{final}
+    {
+        \pgfpathlineto{\pgfpointdecoratedpathlast}
+    }
+    }
+    \begin{tikzpicture}
+        \coordinate (yax) at (0,3);
+        \coordinate (xax) at (7,0);
+        \coordinate (rvo) at (yax -| 2.5,0);
+        \coordinate (uns) at (yax -| 6.5,0);
+        \draw [->] ($(xax)-(2,0)$) -- (0,0) -- (yax);
+        \draw [->,decoration={discontinuity,amplitude=0.3cm},decorate] ($(xax)-(2,0)$) -- (xax);
+        \node [above=0.1cm of yax,align=center] {Number\\of Cells};
+        \node [right=0.1cm of xax,align=center] {$V_{th}$};
+        \node [above=0.1cm of rvo,align=center] {Read\\Voltage};
+        \node [above=0.1cm of uns,align=center] {Unselected\\Voltage};
+        \draw [dashed] (rvo |- xax) -- (rvo);
+        \draw [dashed] (uns |- xax) -- (uns);
+        \draw [domain=0.09068986030484495:2.409310139695155,smooth,variable=\x] plot ({\x},{2.1-pow(1.25*(\x-1.25),2)});
+        \draw [domain=2.590689860304845:4.909310139695155,smooth,variable=\x] plot ({\x},{2.1-pow(1.25*(\x-3.75),2)});
+        \node at (1.25,1) {"1"};
+        \node at (3.75,1) {"0"};
+    \end{tikzpicture}
     \centering
     \caption{Threshold Distribution of a Floating Gate Transistor\cite{RiTo98}}
     \label{nand_th}
